@@ -14,6 +14,10 @@ object IO:
     def use[B](f: A => B): Either[Throwable, B] =
       Using(closeable)(f).toEither
 
+object Net:
+  type Port = Int
+  type NetAddress = String
+
 object Resources:
   import IO.*
   import java.net.URL

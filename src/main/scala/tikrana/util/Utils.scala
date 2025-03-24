@@ -4,6 +4,7 @@ import scala.util.{Failure, Success, Try, Using}
 
 object Utils:
   export ErrCond.*
+  export Net.*
   export IO.*
   export Resources.*
 
