@@ -18,3 +18,22 @@
 
 // //> using testFramework "munit.Framework"
 // //> using options "-coverage-out:${.}"
+
+import java.awt.Desktop
+import java.net.URI
+import tikrana.util.Utils.*
+import tikrana.web.WebServer
+
+// Run with:
+//     scala run project.scala src -- 0.0.0.0 1234
+object Runner:
+  @main
+  def run(address: NetAddress, port: Port) =
+    WebServer(address, port).let: webServer =>
+      webServer.start()
+      println(s"Web sever running on $address:$port. Ctrl-C to shutdown...")
+      Runtime.getRuntime().addShutdownHook:
+        Thread: () =>
+          println("Shutting down...")
+          webServer.stop()
+      Desktop.getDesktop().browse(URI(s"http://localhost:$port/"))
