@@ -9,19 +9,16 @@ class ErrCondTest extends munit.FunSuite:
       Try(throw Exception("Kaboom!")).toEither
         .mapLeft: exc =>
           ErrCond("Kaput!", exc, "answer" -> "42")
-    result match
-      case Right(_) =>
-        fail("Can't be right!")
-      case Left(errCond) =>
-        assertEquals(errCond.message, "Kaput!")
-        assertEquals(errCond.extraInfo.size, 1)
-        assertEquals(errCond.extraInfo(0), ("answer", "42"))
-        errCond.cause match
-          case None =>
-            fail("Gotta have cause!")
-          case Some(cause) =>
-            cause match
-              case t: Throwable =>
-                assertEquals(t.getMessage, "Kaboom!")
-              case _ =>
-                fail("Gotta be throwable!")
+
+    assert(result.isLeft)
+
+    val errCond = result.fold(identity, _ => fail("Can't be right"))
+    assertEquals(errCond.message, "Kaput!")
+    assertEquals(errCond.extraInfo, Seq(("answer", "42")))
+
+    val cause = errCond.cause
+    assert(cause.isDefined)
+    assert(cause.get.isInstanceOf[Exception])
+
+    val exc = cause.get.asInstanceOf[Exception]
+    assertEquals(exc.getMessage, "Kaboom!")
