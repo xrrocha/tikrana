@@ -1,0 +1,120 @@
+package tikrana.web
+
+object MimeTypeCode:
+  val codeRegex = "[a-z][-.a-z]+/[a-z][-.a-z]+".r
+  def apply(code: String): MimeTypeCode =
+    require(codeRegex.matches(code), s"Invalid mimetype code: '$code'")
+    new MimeTypeCode(code)
+class MimeTypeCode(val code: String) extends AnyVal
+
+trait MimeType:
+  val code: String
+  val defaultExtension: String
+  val description: String
+  val otherExtensions: Set[String]
+
+object MimeType:
+  def apply(
+    code: String,
+    defaultExtension: String,
+    description: String,
+    otherExtensions: Set[String] = Set.empty
+  ): MimeType = new MimeType:
+    override val code = code
+    override val defaultExtension = defaultExtension
+    override val description = description
+    override val otherExtensions = otherExtensions
+
+object MimeTypes:
+  lazy val extensionMap:Map[String, MimeType] =
+    values
+      .flatMap: value =>
+        (value.otherExtensions + value.defaultExtension)
+          .map(_ -> value)
+      .toMap
+
+  def apply(extension: String): Option[MimeType] =
+    extensionMap.get(extension)
+
+  // def apply(more: Map[String, 
+
+enum MimeTypes(
+  override val code: String,
+  override val defaultExtension: String,
+  override val description: String,
+  override val otherExtensions: Set[String] = Set.empty
+) extends MimeType:
+
+    case AAC extends MimeTypes("audio/aac", "aac", "AAC audio")
+    case ABW extends MimeTypes("application/x-abiword", "abw", "AbiWord document")
+    case APNG extends MimeTypes("image/apng", "apng", "Animated Portable Network Graphics (APNG) image")
+    case ARC extends MimeTypes("application/x-freearc", "arc", "Archive document (multiple files embedded)")
+    case AVI extends MimeTypes("video/x-msvideo", "avi", "AVI: Audio Video Interleave")
+    case AVIF extends MimeTypes("image/avif", "avif", "AVIF image")
+    case AZW extends MimeTypes("application/vnd.amazon.ebook", "azw", "Amazon Kindle eBook format")
+    case BIN extends MimeTypes("application/octet-stream", "bin", "Any kind of binary data")
+    case BMP extends MimeTypes("image/bmp", "bmp", "Windows OS/2 Bitmap Graphics")
+    case BZ extends MimeTypes("application/x-bzip", "bz", "BZip archive")
+    case BZ2 extends MimeTypes("application/x-bzip2", "bz2", "BZip2 archive")
+    case CDA extends MimeTypes("application/x-cdf", "cda", "CD audio")
+    case CSH extends MimeTypes("application/x-csh", "csh", "C-Shell script")
+    case CSS extends MimeTypes("text/css", "css", "Cascading Style Sheets (CSS)")
+    case CSV extends MimeTypes("text/csv", "csv", "Comma-separated values (CSV)")
+    case DOC extends MimeTypes("application/msword", "doc", "Microsoft Word")
+    case DOCX extends MimeTypes("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx", "Microsoft Word (OpenXML)")
+    case EOT extends MimeTypes("application/vnd.ms-fontobject", "eot", "MS Embedded OpenType fonts")
+    case EPUB extends MimeTypes("application/epub+zip", "epub", "Electronic publication (EPUB)")
+    case GIF extends MimeTypes("image/gif", "gif", "Graphics Interchange Format (GIF)")
+    case GZ extends MimeTypes("application/gzip", "gz", "GZip Compressed Archive")
+    case GZIP extends MimeTypes("application/x-gzip", "gzip", "GZip Compressed Archive")
+    case HTML extends MimeTypes("text/html", "html", "HyperText Markup Language (HTML)", Set("htm"))
+    case ICO extends MimeTypes("image/vnd.microsoft.icon", "ico", "Icon format")
+    case ICS extends MimeTypes("text/calendar", "ics", "iCalendar format")
+    case JAR extends MimeTypes("application/java-archive", "jar", "Java Archive (JAR)")
+    case JPEG extends MimeTypes("image/jpeg", "jpeg", "JPEG images", Set("jpg"))
+    case JS extends MimeTypes("text/javascript", "js", "JavaScript")
+    case JSON extends MimeTypes("application/json", "json", "JSON format")
+    case JSONLD extends MimeTypes("application/ld+json", "jsonld", "JSON-LD format")
+    case MIDI extends MimeTypes("audio/midi", "midi", "Musical Instrument Digital Interface (MIDI)", Set("mid"))
+    case MJS extends MimeTypes("text/javascript", "mjs", "JavaScript module")
+    case MP3 extends MimeTypes("audio/mpeg", "mp3", "MP3 audio")
+    case MP4 extends MimeTypes("video/mp4", "mp4", "MP4 video")
+    case MPEG extends MimeTypes("video/mpeg", "mpeg", "MPEG Video")
+    case MPKG extends MimeTypes("application/vnd.apple.installer+xml", "mpkg", "Apple Installer Package")
+    case ODP extends MimeTypes("application/vnd.oasis.opendocument.presentation", "odp", "OpenDocument presentation document")
+    case ODS extends MimeTypes("application/vnd.oasis.opendocument.spreadsheet", "ods", "OpenDocument spreadsheet document")
+    case ODT extends MimeTypes("application/vnd.oasis.opendocument.text", "odt", "OpenDocument text document")
+    case OGA extends MimeTypes("audio/ogg", "oga", "Ogg audio")
+    case OGV extends MimeTypes("video/ogg", "ogv", "Ogg video")
+    case OGX extends MimeTypes("application/ogg", "ogx", "Ogg")
+    case OPUS extends MimeTypes("audio/ogg", "opus", "Opus audio in Ogg container")
+    case OTF extends MimeTypes("font/otf", "otf", "OpenType font")
+    case PDF extends MimeTypes("application/pdf", "pdf", "Adobe Portable Document Format (PDF)")
+    case PHP extends MimeTypes("application/x-httpd-php", "php", "Hypertext Preprocessor (Personal Home Page)")
+    case PNG extends MimeTypes("image/png", "png", "Portable Network Graphics")
+    case PPT extends MimeTypes("application/vnd.ms-powerpoint", "ppt", "Microsoft PowerPoint")
+    case PPTX extends MimeTypes("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx", "Microsoft PowerPoint (OpenXML)")
+    case RAR extends MimeTypes("application/vnd.rar", "rar", "RAR archive")
+    case RTF extends MimeTypes("application/rtf", "rtf", "Rich Text Format (RTF)")
+    case SH extends MimeTypes("application/x-sh", "sh", "Bourne shell script")
+    case SVG extends MimeTypes("image/svg+xml", "svg", "Scalable Vector Graphics (SVG)")
+    case TAR extends MimeTypes("application/x-tar", "tar", "Tape Archive (TAR)")
+    case TIFF extends MimeTypes("image/tiff", "tiff", "Tagged Image File Format (TIFF)", Set("tif"))
+    case TS extends MimeTypes("video/mp2t", "ts", "MPEG transport stream")
+    case TTF extends MimeTypes("font/ttf", "ttf", "TrueType Font")
+    case TXT extends MimeTypes("text/plain", "txt", "Text, (generally ASCII or ISO 8859-n)")
+    case VSD extends MimeTypes("application/vnd.visio", "vsd", "Microsoft Visio")
+    case WAV extends MimeTypes("audio/wav", "wav", "Waveform Audio Format")
+    case WEBA extends MimeTypes("audio/webm", "weba", "WEBM audio")
+    case WEBM extends MimeTypes("video/webm", "webm", "WEBM video")
+    case WEBP extends MimeTypes("image/webp", "webp", "WEBP image")
+    case WOFF extends MimeTypes("font/woff", "woff", "Web Open Font Format (WOFF)")
+    case WOFF2 extends MimeTypes("font/woff2", "woff2", "Web Open Font Format (WOFF)")
+    case XHTML extends MimeTypes("application/xhtml+xml", "xhtml", "XHTML")
+    case XLS extends MimeTypes("application/vnd.ms-excel", "xls", "Microsoft Excel")
+    case XLSX extends MimeTypes("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx", "Microsoft Excel (OpenXML)")
+    case XML extends MimeTypes("application/xml", "xml", "XML")
+    case XUL extends MimeTypes("application/vnd.mozilla.xul+xml", "xul", "XUL")
+    case ZIP extends MimeTypes("application/zip", "zip", "ZIP archive")
+    case YAML extends MimeTypes("application/yaml", "yaml", "YAML file", Set("yml"))
+end MimeTypes

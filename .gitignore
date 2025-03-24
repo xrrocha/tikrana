@@ -1,0 +1,10 @@
+*.log
+*.swp
+.DS_Store
+.bsp
+.idea/
+.local/
+.metals
+.scala-build
+.scalafmt.conf
+~*.*
