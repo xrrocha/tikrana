@@ -45,4 +45,4 @@ case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
       server.createContext("/", this)
     .mapLeft: t =>
       Fault(s"Error creating web server", t)
-        .logFiner(logger, WITH_NO_STACK_TRACE)
+        .logFiner(logger)
