@@ -1,6 +1,5 @@
 package tikrana.util
 
-import java.io.Closeable
 import scala.util.*
 
 object Fault:
