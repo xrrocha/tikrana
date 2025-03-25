@@ -30,7 +30,8 @@ object Fault:
 
 class Fault(
     template: => String,
-    val cause: Option[Fault | Throwable] = None
+    val cause: Option[Fault | Throwable] = None,
+    val data: Option[Any] = None
 ):
   lazy val message = template
 
