@@ -10,8 +10,8 @@ object WebServer:
   val logger = Logger.getLogger("tikrana.web.WebServer")
 
 case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
+  import WebServer.*
   private var server = createServer()
-  given logger: Logger = WebServer.logger
 
   def start(): Either[Fault, WebServer] =
     server
