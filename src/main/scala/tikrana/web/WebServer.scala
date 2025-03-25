@@ -23,6 +23,7 @@ case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
       out.write(responseBody)
       out.flush()
 
+  // TODO Catch i/o and network-binding exceptions
   private def createServer() =
     HttpServer
       .create(InetSocketAddress(address, port), 0)
