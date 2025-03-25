@@ -1,5 +1,6 @@
 *.log
 *.swp
+./test.sc
 .DS_Store
 .bsp
 .idea/
