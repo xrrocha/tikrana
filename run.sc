@@ -5,9 +5,6 @@
 //> using file project.scala
 //> using files src/main/scala
 
-import java.awt.Desktop
-import java.net.URI
-import java.util.logging.Logger
 import tikrana.util.Utils.*
 import tikrana.web.WebServer
 
@@ -27,7 +24,6 @@ WebServer(address, port)
     sys.addShutdownHook:
       logger.info("Shutting down...")
       server.stop()
-    // Desktop.getDesktop().browse(URI(s"http://localhost:$port/"))
   .peekLeft: fault =>
     fault.logSevere(logger, WITH_NO_STACK_TRACE)
     sys.exit(1)
