@@ -21,13 +21,12 @@ class FaultTest extends munit.FunSuite:
     val either =
       Try(throw Exception("Kaboom!")).toEither
         .mapLeft: exc =>
-          Fault("Kaput!", exc, "answer" -> "42")
+          Fault("Kaput!", exc)
 
     assert(either.isLeft)
 
     val fault = either.fold(identity, _ => fail("Can't be right"))
     assertEquals(fault.message, "Kaput!")
-    assertEquals(fault.extraInfo, Seq(("answer", "42")))
 
     val cause = fault.cause
     assert(cause.isDefined)

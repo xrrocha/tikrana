@@ -17,16 +17,7 @@ object Fault:
 
 class Fault(
     val message: String,
-    val cause: Option[Fault | Throwable] = None,
-    val extraInfo: Seq[(String, Any)] = Seq.empty
+    val cause: Option[Fault | Throwable] = None
 ):
   def this(message: String, cause: Fault | Throwable) =
     this(message, Some(cause))
-  def this(
-      message: String,
-      cause: Fault | Throwable,
-      extraInfo: (String, String)*
-  ) =
-    this(message, Some(cause), extraInfo)
-  def this(message: String, extraInfo: (String, String)*) =
-    this(message, None, extraInfo)
