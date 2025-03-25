@@ -3,6 +3,9 @@ package tikrana.util
 import scala.util.*
 
 object Fault:
+  enum LogOpt:
+    case WITH_STACK_TRACE, WITH_NO_STACK_TRACE
+
   def catching[B](f: => B): Either[Throwable, B] =
     try
       Right(f)
@@ -36,18 +39,96 @@ class Fault(
   def this(template: => String, cause: Fault | Throwable) =
     this(template, Some(cause))
 
+  import Fault.LogOpt
+  import Fault.LogOpt.*
+  import annotation.tailrec
   import java.util.logging.*
-  def logSevere()(using logger: Logger) = log(Level.SEVERE, logger)
-  def logWarning()(using logger: Logger) = log(Level.WARNING, logger)
-  def logInfo()(using logger: Logger) = log(Level.INFO, logger)
-  def logConfig()(using logger: Logger) = log(Level.CONFIG, logger)
-  def logFine()(using logger: Logger) = log(Level.FINE, logger)
-  def logFiner()(using logger: Logger) = log(Level.FINER, logger)
-  def logFinest()(using logger: Logger) = log(Level.FINEST, logger)
-  def log(level: Level, logger: Logger): Fault =
+  import java.util.logging.Level.*
+
+  def logSevere(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(SEVERE, option, logger)
+
+  def logWarning(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(Level.WARNING, option, logger)
+
+  def logInfo(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(INFO, option, logger)
+
+  def logConfig(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(CONFIG, option, logger)
+
+  def logFine(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(FINE, option, logger)
+
+  def logFiner(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(FINER, option, logger)
+
+  def logFinest(
+    logger: Logger,
+    option: LogOpt = WITH_NO_STACK_TRACE
+  ) =
+    log(FINEST, option, logger)
+
+  def logRecursive(
+    level: Level,
+    option: LogOpt,
+    logger: Logger
+  ): Fault =
+    doLogRecursive(level, option, logger)
+    this
+
+  @tailrec
+  private def doLogRecursive(
+    level: Level,
+    option: LogOpt,
+    logger: Logger
+  ): Unit =
+    log(level, option, logger)
     cause match
-      case Some(throwable: Throwable) =>
-        logger.log(level, throwable, () => message)
+      case Some(fault: Fault) =>
+        fault.doLogRecursive(level, option, logger)
+      case _ =>
+
+  def log(
+    level: Level,
+    option: LogOpt,
+    logger: Logger
+  ): Fault =
+
+    cause match
+
+      case Some(t: Throwable) =>
+        val tMessage =
+          val msg = t.getMessage
+          if msg != null then msg 
+          else t.toString
+
+        option match
+
+          case WITH_STACK_TRACE =>
+            logger.log(level, t, () => message)
+
+          case WITH_NO_STACK_TRACE =>
+            logger.log(level, () => s"$message: $tMessage")
+
       case _ =>
         logger.log(level, () => message)
     this

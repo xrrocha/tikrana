@@ -4,8 +4,10 @@ import scala.util.{Failure, Success, Try, Using}
 
 object Utils:
   export Fault.*
-  export Net.*
+  export Fault.LogOpt.*
+
   export IO.*
+  export Net.*
   export Resources.*
 
   type Time = Long

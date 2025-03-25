@@ -3,7 +3,7 @@ package tikrana.util
 import scala.util.*
 import tikrana.util.Utils.*
 
-// TODO Test logging
+// TODO Test [recursive] logging
 class FaultTest extends munit.FunSuite:
   test("Catches throwing"):
     val either = Fault.catching(throw Exception("Kaboom!"))
