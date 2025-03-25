@@ -5,9 +5,9 @@ import tikrana.util.Utils.*
 
 class FaultTest extends munit.FunSuite:
   test("Catches throwing"):
-    val result = Fault.catching(throw Exception("Kaboom!"))
-    assert(result.isLeft)
-    val throwable = result.fold(identity, _ => fail("Can't be right!"))
+    val either = Fault.catching(throw Exception("Kaboom!"))
+    assert(either.isLeft)
+    val throwable = either.fold(identity, _ => fail("Can't be right!"))
     assertEquals(throwable.getMessage, "Kaboom!")
 
   test("Passes not throwing"):
@@ -18,14 +18,14 @@ class FaultTest extends munit.FunSuite:
         assertEquals(value, 42)
 
   test("mapLeft works"):
-    val result =
+    val either =
       Try(throw Exception("Kaboom!")).toEither
         .mapLeft: exc =>
           Fault("Kaput!", exc, "answer" -> "42")
 
-    assert(result.isLeft)
+    assert(either.isLeft)
 
-    val fault = result.fold(identity, _ => fail("Can't be right"))
+    val fault = either.fold(identity, _ => fail("Can't be right"))
     assertEquals(fault.message, "Kaput!")
     assertEquals(fault.extraInfo, Seq(("answer", "42")))
 

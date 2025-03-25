@@ -4,9 +4,10 @@ import scala.util.*
 
 object Fault:
   def catching[B](f: => B): Either[Throwable, B] =
-    Try(f) match
-      case Success(s) => Right(s)
-      case Failure(t) => Left(t)
+    try
+      Right(f)
+    catch
+      case (t: Throwable) => Left(t)
 
   extension [A, B](either: Either[A, B])
     def mapLeft[C](f: A => C): Either[C, B] =
