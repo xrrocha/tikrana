@@ -2,7 +2,7 @@
 //> using platform jvm
 //> using options -deprecation -release:24
 
-//> using jvm graalvm-oracle:24
+//> using jvm graalvm-oracle:23
 //> using javaOpt -Xmx4g
 
 //> using resourceDir src/main/resources
