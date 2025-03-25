@@ -12,7 +12,8 @@ class FaultTest extends munit.FunSuite:
     assertEquals(throwable.getMessage, "Kaboom!")
 
   test("Passes not throwing"):
-    Fault.catching(42)
+    Fault
+      .catching(42)
       .also: either =>
         assert(either.isRight)
         val value = either.getOrElse(fail("Can't be left"))

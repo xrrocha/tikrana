@@ -24,4 +24,3 @@ class WebServerTest extends munit.FunSuite:
       .let(String(_, "UTF-8"))
       .also: result =>
         assertEquals(result, "<h1>In the works...</h1>")
-    

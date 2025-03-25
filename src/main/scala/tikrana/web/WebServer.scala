@@ -27,9 +27,11 @@ case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
     val responseBody =
       "<h1>In the works...</h1>".getBytes()
     exchange.sendResponseHeaders(200, responseBody.length)
-    exchange.getResponseBody().use: out =>
-      out.write(responseBody)
-      out.flush()
+    exchange
+      .getResponseBody()
+      .use: out =>
+        out.write(responseBody)
+        out.flush()
 
   private def createServer(): Either[Fault, HttpServer] =
     catching:
