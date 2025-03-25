@@ -1,6 +1,6 @@
 package tikrana.util
 
-import ErrCond.*
+import Fault.*
 
 object IO:
   import java.io.Closeable
@@ -26,13 +26,13 @@ object Resources:
   def readResourceText(
       path: Filename,
       encoding: String = "UTF-8"
-  ): Either[ErrCond, String] =
+  ): Either[Fault, String] =
     readResource(path)
       .map(String(_, encoding))
 
-  def readResource(path: Filename): Either[ErrCond, Array[Byte]] =
+  def readResource(path: Filename): Either[Fault, Array[Byte]] =
     withResourceStream(path)(_.readAllBytes())
-      .mapLeft(ErrCond(s"Error while reading resource '$path'", _))
+      .mapLeft(Fault(s"Error while reading resource '$path'", _))
 
   def withResourceStream[A](
       path: Filename
@@ -43,9 +43,9 @@ object Resources:
       .toRight(FileNotFoundException(s"No such resource: '$path'"))
       .flatMap(_.use(f))
 
-  def openResource(path: Filename): Either[ErrCond, InputStream] =
+  def openResource(path: Filename): Either[Fault, InputStream] =
     getResourceAsStream(path)
-      .toRight(ErrCond(s"No such resource $path"))
+      .toRight(Fault(s"No such resource $path"))
 
   def getResourceAsStream(
       path: Filename,

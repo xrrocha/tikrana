@@ -3,7 +3,7 @@ package tikrana.util
 import scala.util.{Failure, Success, Try, Using}
 
 object Utils:
-  export ErrCond.*
+  export Fault.*
   export Net.*
   export IO.*
   export Resources.*
