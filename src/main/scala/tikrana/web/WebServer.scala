@@ -32,6 +32,9 @@ case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
       .use: out =>
         out.write(responseBody)
         out.flush()
+      .mapLeft: t =>
+        Fault(s"I/O error handling exchange ${exchange.getRequestURI()}", t)
+          .logWarning(logger, WITH_STACK_TRACE)
 
   private def createServer(): Either[Fault, HttpServer] =
     catching:
