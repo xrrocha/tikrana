@@ -4,12 +4,21 @@ import com.sun.net.httpserver.*
 import java.net.InetSocketAddress
 import java.util.logging.Logger
 import tikrana.util.Fault
-import tikrana.util.Utils.*
+import tikrana.util.Fault.*
+import tikrana.util.Fault.LogOpt.*
+import tikrana.util.IO.*
+import tikrana.util.Net.*
 
 object WebServer:
   val logger = Logger.getLogger("tikrana.web.WebServer")
 
-case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
+case class WebServerConfig(
+    address: NetAddress,
+    port: Port,
+    baseDirectory: DirectoryName
+)
+
+case class WebServer(config: WebServerConfig) extends HttpHandler:
   import WebServer.*
   private var server = createServer()
 
@@ -38,7 +47,7 @@ case class WebServer(address: NetAddress, port: Port) extends HttpHandler:
 
   private def createServer(): Either[Fault, HttpServer] =
     catching:
-      HttpServer.create(InetSocketAddress(address, port), 0)
+      HttpServer.create(InetSocketAddress(config.address, config.port), 0)
     .peek: server =>
       // TODO Use sensible executor for WebServer (w/virtual threads)
       server.setExecutor(null)

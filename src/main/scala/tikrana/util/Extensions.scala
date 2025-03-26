@@ -17,6 +17,7 @@ object IO:
 object Net:
   type Port = Int
   type NetAddress = String
+  type DirectoryName = String
 
 object Resources:
   import IO.*
