@@ -15,13 +15,14 @@ if args.length < 2 then
   println("Usage: run.sc netAddress netPort")
   sys.exit(1)
 
-"logging.properties".let: loggingResource =>
-  getResourceAsStream(loggingResource) match
-    case Some(is) =>
-      LogManager.getLogManager().readConfiguration(is)
-    case None =>
-      println(s"No such resource: $loggingResource")
-      sys.exit(1)
+// TODO i18n w/resource bundlers
+"logging.properties"
+  .let: loggingResource =>
+    getResourceAsStream(loggingResource) match
+      case Some(is) =>
+        LogManager.getLogManager().readConfiguration(is)
+      case None =>
+        println(s"WARNING: No '$loggingResource' found, using logging defaults")
 
 val config = WebServerConfig(
   address = args(0),
