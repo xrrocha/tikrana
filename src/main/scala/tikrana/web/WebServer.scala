@@ -15,8 +15,9 @@ object WebServer:
 case class WebServerConfig(
     address: NetAddress,
     port: Port,
-    baseDirectory: DirectoryName
-)
+    baseDirectory: DirectoryName = System.getProperty("user.dir")
+):
+  lazy val uri = s"http://$address:$port"
 
 case class WebServer(config: WebServerConfig) extends HttpHandler:
   import WebServer.*

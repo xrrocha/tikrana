@@ -5,9 +5,11 @@ import scala.util.*
 import tikrana.util.Utils.*
 
 class WebServerTest extends munit.FunSuite:
-  val address = "0.0.0.0"
-  val port = 1234
-  private val server = WebServer(address, port)
+  val config = WebServerConfig(
+    address = "0.0.0.0",
+    port = 1234
+  )
+  private val server = WebServer(config)
 
   override def beforeEach(context: BeforeEach): Unit =
     server.start()
@@ -16,7 +18,7 @@ class WebServerTest extends munit.FunSuite:
     server.stop()
 
   test("Web server servers basic content"):
-    URI(s"http://localhost:$port/")
+    URI(config.uri)
       .toURL()
       .openStream()
       .let(Using(_)(_.readAllBytes()))

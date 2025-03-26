@@ -5,20 +5,29 @@
 //> using file project.scala
 //> using files src/main/scala
 
+import java.util.logging.*
 import tikrana.util.Utils.*
 import tikrana.web.WebServer
-import tikrana.web.WebServerConfig
 import tikrana.web.WebServer.logger
+import tikrana.web.WebServerConfig
 
 if args.length < 2 then
   println("Usage: run.sc netAddress netPort")
   sys.exit(1)
 
+"logging.properties".let: loggingResource =>
+  getResourceAsStream(loggingResource) match
+    case Some(is) =>
+      LogManager.getLogManager().readConfiguration(is)
+    case None =>
+      println(s"No such resource: $loggingResource")
+      sys.exit(1)
+
 val config = WebServerConfig(
   address = args(0),
-  port = args(1).toInt,
-  baseDirectory = System.getProperty("user.dir")
+  port = args(1).toInt
 )
+logger.config(s"Configuration: $config")
 
 WebServer(config)
   .start()
