@@ -33,7 +33,7 @@ WebServer(config)
   .start()
   .peek: server =>
     logger.info(
-      s"Web sever running on ${config.address}:${config.port}. Ctrl-C to shutdown..."
+      s"Web sever running on ${config.uri}. Ctrl-C to shutdown..."
     )
     // TODO This shutdown hook doesn't appear to run. Java's Runtime does...
     sys.addShutdownHook:
