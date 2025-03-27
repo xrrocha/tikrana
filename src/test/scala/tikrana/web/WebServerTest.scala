@@ -30,20 +30,6 @@ class WebServerTest extends munit.FunSuite:
   private val indexPage = readResourceText(s"$packageName/index.html")
     .getOrElse(fail("Failed to read index page"))
 
-  val expectedSubdir: String =
-    """
-      |<html>
-      |<head>
-      |  <meta charset='UTF-8'>
-      |  <title>Directory listing for subdir</title>
-      |</head>
-      |<body>
-      |  <h1>Directory listing for subdir</h1>
-      |  <a href='other.html'>other.html</a>
-      |</body>
-      |</html>
-      |""".stripMargin
-
   override def beforeEach(context: BeforeEach): Unit =
     server
       .start()
@@ -52,6 +38,9 @@ class WebServerTest extends munit.FunSuite:
   override def afterEach(context: AfterEach): Unit =
     server.stop()
 
+  test("Web server servers directories from classpath".ignore):
+    println("TODO: Web server servers directories from classpath")
+
   test("Web server servers implicit index page"):
     assertEquals(getPage(""), indexPage)
 
@@ -59,6 +48,19 @@ class WebServerTest extends munit.FunSuite:
     assertEquals(getPage("index.html"), indexPage)
 
   test("Web server servers directory with no index file"):
+    val expectedSubdir: String =
+      """
+      |<html>
+      |<head>
+      |  <meta charset='UTF-8'>
+      |  <title>Directory listing</title>
+      |</head>
+      |<body>
+      |  <h1>Directory listing</h1>
+      |  <a href='other.html'>other.html</a>
+      |</body>
+      |</html>
+      |""".stripMargin
     assertEquals(getPage("subdir"), expectedSubdir)
 
   def getPage(location: String): String =

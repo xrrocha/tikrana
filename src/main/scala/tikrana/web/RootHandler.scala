@@ -150,13 +150,7 @@ class FileResource(file: File) extends Resource:
     Try:
       if file.isFile then FileInputStream(file).readAllBytes()
       else
-        val directoryName =
-          if file.getName == "" then "/"
-          else file.getName
-        directory2Html(
-          directoryName,
-          file.listFiles().toList.map(_.getName)
-        )
+        directory2Html(file.listFiles().toList.map(_.getName))
           .getBytes("UTF-8")
     .mapFailure: t =>
       Fault(s"Error reading file '${file.getAbsolutePath}'", t)
@@ -175,43 +169,33 @@ class ClasspathLoader(
   override def load(path: Path): Option[Resource] =
     getResource(s"$packageName/$path", classLoader)
       .map: url =>
-        val uri = url.toURI
-        if uri.getScheme == "file" then FileResource(new File(uri))
-        else
-          new Resource:
-            override def contents(): Try[ByteArray] =
-              Try(url.openStream().readAllBytes())
-                .mapFailure: t =>
-                  Fault(s"Error reading resource: '$path'", t)
-                    .logAsWarning(logger)
-            override def stillExists(): Boolean =
-              true
-            override def hasChangedSince(time: Millis): Boolean =
-              false
+        new Resource:
+          override def contents(): Try[ByteArray] =
+            Try(url.openStream().readAllBytes())
+              .mapFailure: t =>
+                Fault(s"Error reading resource: '$path'", t)
+                  .logAsWarning(logger)
+          override def stillExists(): Boolean =
+            true
+          override def hasChangedSince(time: Millis): Boolean =
+            false
 end ClasspathLoader
 
-// Move html functions to proper location
-// TODO Actually escape html
-def escapeHtml(html: String): String = html
-
-def directory2Html(
-    directoryName: DirectoryName,
-    children: => Seq[Filename]
-): String =
-  val escapedDirectoryName = escapeHtml(directoryName)
-  children
-    .map: childName =>
-      val escapedName = escapeHtml(childName)
-      s"  <a href='$escapedName'>$escapedName</a>"
+// TODO Move html functions to proper location
+def directory2Html(filenames: => Seq[Filename]): String =
+  filenames
+    .map(escapeHtml)
+    .map: filename =>
+      s"  <a href='$filename'>$filename</a>"
     .mkString(
       start = s"""
                  |<html>
                  |<head>
                  |  <meta charset='UTF-8'>
-                 |  <title>Directory listing for $escapedDirectoryName</title>
+                 |  <title>Directory listing</title>
                  |</head>
                  |<body>
-                 |  <h1>Directory listing for $escapedDirectoryName</h1>
+                 |  <h1>Directory listing</h1>
                  |""".stripMargin,
       sep = "<br>",
       end = """
@@ -220,3 +204,6 @@ def directory2Html(
               |""".stripMargin
     )
 end directory2Html
+
+// TODO Actually escape html
+def escapeHtml(html: String): String = html
