@@ -5,6 +5,8 @@ import tikrana.util.Utils.*
 
 import java.net.URI
 
+import scala.util.{Failure, Success}
+
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"
 
@@ -14,8 +16,12 @@ class WebServerTest extends munit.FunSuite:
     // InetSocketAddress: A port number of zero will let the system
     // pick up an ephemeral port in a bind operation
     port = 1234,
+    baseDirectory = None,
     basePackage = Some(packageName)
-  )
+  ) match
+    case Success(c) => c
+    case Failure(t) =>
+      fail(s"Bad web server configuration: ${t.getMessage}")
 
   private val server = WebServer(config)
 

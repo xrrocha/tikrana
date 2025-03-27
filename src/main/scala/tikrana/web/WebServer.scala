@@ -45,4 +45,3 @@ case class WebServer(config: Config):
       Fault(s"Error creating web webServer", t)
         .logAsWarning(logger)
 end WebServer
-

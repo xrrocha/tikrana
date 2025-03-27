@@ -51,13 +51,13 @@ class RootHandler(config: Config) extends HttpHandler:
   case class Entry(resource: Resource, handler: Handler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
-  private val loaders:Seq[ResourceLoader] = Seq(
+  private val loaders: Seq[ResourceLoader] = Seq(
     config.baseDirectory.map(FileLoader(_)),
-    // TODO Make class loader configurable
     config.basePackage.map(ClasspathLoader(_, config.classLoader))
   )
     .filter(_.isDefined)
     .map(_.get)
+
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes
 
