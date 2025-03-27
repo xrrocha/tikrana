@@ -1,15 +1,14 @@
 package tikrana.web
 
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
+import java.util.logging.Level
+import java.util.logging.Level.*
+import java.util.logging.Logger
+import scala.util.Try
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-
-import com.sun.net.httpserver.HttpServer
-import java.net.InetSocketAddress
-import java.util.logging.Level.*
-import java.util.logging.{Level, Logger}
-
-import scala.util.Try
 
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 

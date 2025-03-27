@@ -1,11 +1,10 @@
 package tikrana.web
 
+import java.net.URI
+import scala.util.Failure
+import scala.util.Success
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-
-import java.net.URI
-
-import scala.util.{Failure, Success}
 
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"

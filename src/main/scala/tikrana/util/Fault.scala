@@ -1,6 +1,7 @@
 package tikrana.util
 
-import java.util.logging.{Level, Logger}
+import java.util.logging.Level
+import java.util.logging.Logger
 
 class Fault(
     template: => String,

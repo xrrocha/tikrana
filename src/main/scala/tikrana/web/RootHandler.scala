@@ -1,17 +1,19 @@
 package tikrana.web
 
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import java.io.File
+import java.io.FileInputStream
+import java.util.logging.Level
+import java.util.logging.Level.FINE
+import java.util.logging.Logger
+import scala.collection.mutable
+import scala.util.Success
+import scala.util.Try
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
-
-import com.sun.net.httpserver.{HttpExchange, HttpHandler}
-import java.io.{File, FileInputStream}
-import java.util.logging.{Level, Logger}
-import java.util.logging.Level.FINE
-
-import scala.util.{Success, Try}
-import scala.collection.mutable
 
 enum HttpCode(val code: Int, val message: String):
   case OK extends HttpCode(200, "OK")

@@ -1,11 +1,15 @@
 package tikrana.util
 
-import tikrana.util.Types.*
-
-import java.io.{Closeable, InputStream}
+import java.io.Closeable
+import java.io.InputStream
 import java.net.URL
-import java.util.logging.{Level, Logger}
-import scala.util.{Failure, Success, Try, Using}
+import java.util.logging.Level
+import java.util.logging.Logger
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.util.Using
+import tikrana.util.Types.*
 
 object Extensions:
   // Option

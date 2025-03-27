@@ -1,14 +1,12 @@
 package tikrana.web
 
-import tikrana.util.Fault
-import tikrana.util.Utils.*
-
 import java.io.File
 import java.net.InetSocketAddress
-
-import scala.util.Try
-import tikrana.util.Resources.getResource
 import scala.annotation.threadUnsafe
+import scala.util.Try
+import tikrana.util.Fault
+import tikrana.util.Resources.getResource
+import tikrana.util.Utils.*
 
 enum Protocol:
   case HTTP, HTTPS

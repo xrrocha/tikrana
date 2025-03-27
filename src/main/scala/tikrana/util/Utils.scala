@@ -1,8 +1,8 @@
 package tikrana.util
 
 object Utils:
-  export Types.*
   export Extensions.*
+  export Types.*
 
   implicit class KLike[T](t: T):
     def let[R](f: T => R): R = f(t)
