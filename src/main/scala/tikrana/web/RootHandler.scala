@@ -18,6 +18,8 @@ trait Resource:
   def hasChangedSince(time: Millis): Boolean
 
 trait Handler:
+  // Handler.handle is a no-op for now
+  // will server dynamic content later on
   def handle(exchange: HttpExchange): Try[Result]
 object Handler:
   val NotFound: Handler = _ => Success(Result.NotFound)
@@ -27,13 +29,22 @@ trait ResourceLoader:
 object ResourceLoader:
   val DefaultMimeType = "application/octet-stream"
 
+object RootHandler:
+  def indexFile: Path = "index.html"
+end RootHandler
+
 class RootHandler(config: Config) extends HttpHandler:
   case class Entry(resource: Resource, handler: Handler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
   private val loaders: Seq[ResourceLoader] = Seq(
     config.baseDirectory.map(FileLoader(_)),
-    config.basePackage.map(ClasspathLoader(_, config.classLoader))
+    config.basePackage.flatMap: packageName =>
+      getResource(s"$packageName/")
+        .map: url =>
+          val uri = url.toURI
+          if uri.getScheme == "file" then FileLoader(File(uri))
+          else ClasspathLoader(packageName, config.classLoader)
   )
     .filter(_.isDefined)
     .map(_.get)
@@ -66,6 +77,7 @@ class RootHandler(config: Config) extends HttpHandler:
     cache.get(path) match
       case Some((Entry(resource, sameHandler), time)) =>
         if !resource.stillExists() then
+          // TODO Remove all cache entries descending from path
           cache.remove(path)
           Handler.NotFound
         else if resource.hasChangedSince(time) then
@@ -74,6 +86,9 @@ class RootHandler(config: Config) extends HttpHandler:
       case None =>
         buildHandlerFor(path)
   end getHandler
+
+  def getPath(exchange: HttpExchange): Path =
+    exchange.getRequestURI.getPath.substring(1)
 
   private def buildHandlerFor(path: Path): Handler =
     val loadedResource =
@@ -89,17 +104,6 @@ class RootHandler(config: Config) extends HttpHandler:
         logger.finer(s"Resource not found: $path")
         Handler.NotFound
   end buildHandlerFor
-
-  def getPath(exchange: HttpExchange): Path =
-    exchange.getRequestURI.getPath
-      .substring(1)
-      .let: path =>
-        // TODO Solve directory/index file
-        if path == "" then "index.html"
-        else if path.endsWith("/") then path + "index.html"
-        else path
-      .also: path =>
-        logger.fine(s"Request for $path")
 
   private def buildHandlerFor(path: Path, resource: Resource): Handler =
     val mimeType =
@@ -126,32 +130,45 @@ class RootHandler(config: Config) extends HttpHandler:
     path.extension
 end RootHandler
 
-// TODO Remove entry when file has vanished
+// TODO Pass default indexFile name as a parameter
+class FileLoader(val baseDirectory: Directory) extends ResourceLoader:
+  override def load(path: Path): Option[Resource] =
+    val file =
+      if path.isEmpty then baseDirectory
+      else File(baseDirectory, path)
+    if !(file.exists() && file.canRead) then None
+    else if file.isFile then Some(FileResource(file))
+    else // Directory
+      val indexFile = File(file, RootHandler.indexFile)
+      println(s"indexFile: ${indexFile.getAbsolutePath}")
+      if indexFile.isFile && indexFile.canRead then
+        Some(FileResource(indexFile))
+      else Some(FileResource(file))
+end FileLoader
+
 class FileResource(file: File) extends Resource:
   override def contents(): Try[ByteArray] =
-    Try(FileInputStream(file))
-      .flatMap(_.readBytes())
-      .mapFailure: t =>
-        Fault(s"Error reading file '${file.getAbsolutePath}'", t)
-          .logAsWarning(logger)
-
+    Try:
+      if file.isFile then FileInputStream(file).readAllBytes()
+      else
+        val directoryName =
+          if file.getName == "" then "/"
+          else file.getName
+        directory2Html(
+          directoryName,
+          file.listFiles().toList.map(_.getName)
+        )
+          .getBytes("UTF-8")
+    .mapFailure: t =>
+      Fault(s"Error reading file '${file.getAbsolutePath}'", t)
+        .logAsWarning(logger)
   override def stillExists(): Boolean =
-    // TODO Consider mapping !file.canRead() to UNAUTHORIZED
     file.exists() && file.canRead
   override def hasChangedSince(time: Millis): Boolean =
     file.lastModified() > time
 end FileResource
 
-class FileLoader(val directory: Directory) extends ResourceLoader:
-  override def load(path: Path): Option[Resource] =
-    File(directory, path)
-      .let: file =>
-        // TODO Consider mapping !file.canRead() to UNAUTHORIZED
-        if file.exists() && file.canRead then Some(file)
-        else None
-      .map(FileResource(_))
-end FileLoader
-
+// TODO Check for resource (package) directories
 class ClasspathLoader(
     val packageName: Path,
     val classLoader: ClassLoader
@@ -173,3 +190,34 @@ class ClasspathLoader(
             override def hasChangedSince(time: Millis): Boolean =
               false
 end ClasspathLoader
+
+// Move html functions to proper location
+// TODO Actually escape html
+def escapeHtml(html: String): String = html
+
+def directory2Html(
+    directoryName: DirectoryName,
+    children: => Seq[Filename]
+): String =
+  val escapedDirectoryName = escapeHtml(directoryName)
+  children
+    .map: childName =>
+      val escapedName = escapeHtml(childName)
+      s"  <a href='$escapedName'>$escapedName</a>"
+    .mkString(
+      start = s"""
+                 |<html>
+                 |<head>
+                 |  <meta charset='UTF-8'>
+                 |  <title>Directory listing for $escapedDirectoryName</title>
+                 |</head>
+                 |<body>
+                 |  <h1>Directory listing for $escapedDirectoryName</h1>
+                 |""".stripMargin,
+      sep = "<br>",
+      end = """
+              |</body>
+              |</html>
+              |""".stripMargin
+    )
+end directory2Html

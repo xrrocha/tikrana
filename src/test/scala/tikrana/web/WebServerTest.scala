@@ -7,7 +7,7 @@ import java.net.URI
 import scala.util.{Failure, Success}
 
 class WebServerTest extends munit.FunSuite:
-  val packageName = "static"
+  val packageName = "static/"
 
   private val config = Config(
     address = "localhost",
@@ -30,6 +30,20 @@ class WebServerTest extends munit.FunSuite:
   private val indexPage = readResourceText(s"$packageName/index.html")
     .getOrElse(fail("Failed to read index page"))
 
+  val expectedSubdir: String =
+    """
+      |<html>
+      |<head>
+      |  <meta charset='UTF-8'>
+      |  <title>Directory listing for subdir</title>
+      |</head>
+      |<body>
+      |  <h1>Directory listing for subdir</h1>
+      |  <a href='other.html'>other.html</a>
+      |</body>
+      |</html>
+      |""".stripMargin
+
   override def beforeEach(context: BeforeEach): Unit =
     server
       .start()
@@ -43,6 +57,9 @@ class WebServerTest extends munit.FunSuite:
 
   test("Web server serves named resource"):
     assertEquals(getPage("index.html"), indexPage)
+
+  test("Web server servers directory with no index file"):
+    assertEquals(getPage("subdir"), expectedSubdir)
 
   def getPage(location: String): String =
     URI(s"${config.uri}/$location").toURL
