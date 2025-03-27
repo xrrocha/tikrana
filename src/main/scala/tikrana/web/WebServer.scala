@@ -12,9 +12,6 @@ import tikrana.util.Utils.*
 
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
-object WebServer:
-end WebServer
-
 case class WebServer(config: Config):
   private val rootHandler = RootHandler(config)
 
