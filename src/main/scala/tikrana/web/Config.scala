@@ -34,8 +34,9 @@ object Config:
       port: NetPort = 1960,
       stopDelay: Int = 0,
       mimeTypes: Map[Extension, MimeType] = Map.empty,
-      baseDirectory: Option[DirectoryName] =
-        Some(System.getProperty("user.dir")),
+      baseDirectory: Option[DirectoryName] = Some(
+        System.getProperty("user.dir")
+      ),
       basePackage: Option[Path] = None,
       classLoader: ClassLoader = ctxClassLoader
   ): Try[Config] =
@@ -60,7 +61,7 @@ object Config:
       require(
         baseDirectory.isEmpty ||
           baseDirectory
-          .map(File(_))
+            .map(File(_))
             .filter(dir => dir.isDirectory() && dir.canRead())
             .isDefined,
         s"Unreadable base directory: '${baseDirectory.get}'"

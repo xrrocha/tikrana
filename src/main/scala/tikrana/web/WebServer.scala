@@ -12,6 +12,7 @@ import tikrana.util.Utils.*
 
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
+// TODO Support HTTPS
 case class WebServer(config: Config):
   private val rootHandler = RootHandler(config)
 

@@ -15,28 +15,9 @@ import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
 
-enum HttpCode(val code: Int, val message: String):
-  case OK extends HttpCode(200, "OK")
-  case BAD_REQUEST extends HttpCode(400, "Bad Request")
-  case UNAUTHORIZED extends HttpCode(401, "Not Authorized")
-  case NOT_FOUND extends HttpCode(404, "Not Found")
-end HttpCode
-
-case class Result(
-    httpCode: HttpCode,
-    contents: ByteArray,
-    mimeType: MimeType = DefaultMimeType,
-    headers: Map[HeaderName, Seq[HeaderValue]] = Map.empty
-)
-object Result:
-  val NotFound: Result = Result(
-    HttpCode.NOT_FOUND,
-    "<h1>Not found</h1>".getBytes(),
-    "text/html"
-  )
-
 trait Resource:
   def contents(): Try[ByteArray]
+  def stillExists(): Boolean
   def hasChangedSince(time: Millis): Boolean
 
 trait Handler:
@@ -69,6 +50,7 @@ class RootHandler(config: Config) extends HttpHandler:
       .map: result =>
         exchange.sendResponseHeaders(
           result.httpCode.code,
+          // TODO Some handlers may not write a fixed number
           result.contents.length
         )
         exchange.getResponseBody
@@ -85,16 +67,20 @@ class RootHandler(config: Config) extends HttpHandler:
   def getHandler(exchange: HttpExchange): Handler =
     val path = getPath(exchange)
     cache.get(path) match
-      case Some((Entry(resource, handler), time)) =>
-        if resource.hasChangedSince(time) then buildHandlerFor(path, resource)
-        else handler
+      case Some((Entry(resource, sameHandler), time)) =>
+        if !resource.stillExists() then
+          cache.remove(path)
+          Handler.NotFound
+        else if resource.hasChangedSince(time) then
+          buildHandlerFor(path, resource)
+        else
+          sameHandler
       case None =>
-        loadResource(path)
+        buildHandlerFor(path)
   end getHandler
 
-  private def loadResource(path: Path): Handler =
+  private def buildHandlerFor(path: Path): Handler =
     val loadedResource =
-      // TODO Ascertain LazyList is actually needed here
       LazyList
         .from(loaders)
         .map(_.load(path))
@@ -106,7 +92,7 @@ class RootHandler(config: Config) extends HttpHandler:
       case None =>
         logger.fine(s"Resource not found: $path")
         Handler.NotFound
-  end loadResource
+  end buildHandlerFor
 
   def getPath(exchange: HttpExchange): Path =
     exchange.getRequestURI.getPath
@@ -132,29 +118,30 @@ class RootHandler(config: Config) extends HttpHandler:
         .map: contents =>
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>
-          logger.logt(FINE, s"Error retrieving resource '$path'", exc)
-    cache(path) = (Entry(resource, handler), System.currentTimeMillis)
+          logger.logt(FINE, s"Error reading resource '$path'", exc)
+    cache(path) = (
+      Entry(resource, handler),
+      System.currentTimeMillis
+    )
     handler
   end buildHandlerFor
 
   private def getFileType(path: Path): Option[FileType] =
-    // TODO Move filename extension logic to some util object
-    val pos = path.lastIndexOf('.')
-    if pos < 0 then None
-    else Some(path.substring(pos + 1))
-
+    path.extension
 end RootHandler
 
+// TODO Remove entry when file has vanished
 class FileResource(file: File) extends Resource:
   override def contents(): Try[ByteArray] =
-    Try:
-      FileInputStream(file)
-    .flatMap: is =>
-      is.use(_.readAllBytes())
-    .mapFailure: t =>
-      Fault(s"Error reading file '${file.getAbsolutePath}'", t)
-        .logAsWarning(logger)
+    Try(FileInputStream(file))
+      .flatMap(_.readBytes())
+      .mapFailure: t =>
+        Fault(s"Error reading file '${file.getAbsolutePath}'", t)
+          .logAsWarning(logger)
 
+  override def stillExists(): Boolean =
+    // TODO Consider mapping !file.canRead() to UNAUTHORIZED
+    file.exists() && file.canRead()
   override def hasChangedSince(time: Millis): Boolean =
     file.lastModified() > time
 end FileResource
@@ -185,6 +172,8 @@ class ClasspathLoader(
                 .mapFailure: t =>
                   Fault(s"Error reading resource: '$path'", t)
                     .logAsWarning(logger)
+            override def stillExists(): Boolean =
+              true
             override def hasChangedSince(time: Millis): Boolean =
               false
 end ClasspathLoader

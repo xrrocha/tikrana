@@ -41,6 +41,14 @@ object Extensions:
     def errorMessage: String =
       if throwable.getMessage != null then throwable.getMessage
       else throwable.toString()
+  end extension
+
+  extension (string: String)
+    def extension: Option[Extension] =
+      val pos = string.lastIndexOf('.')
+      if pos < 0 then None
+      else Some(string.substring(pos + 1))
+  end extension
 
   // Logger
   extension (logger: Logger)
