@@ -140,7 +140,6 @@ class FileLoader(val baseDirectory: Directory) extends ResourceLoader:
     else if file.isFile then Some(FileResource(file))
     else // Directory
       val indexFile = File(file, RootHandler.indexFile)
-      println(s"indexFile: ${indexFile.getAbsolutePath}")
       if indexFile.isFile && indexFile.canRead then
         Some(FileResource(indexFile))
       else Some(FileResource(file))
