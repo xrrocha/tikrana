@@ -20,7 +20,10 @@ class WebServerTest extends munit.FunSuite:
   ) match
     case Success(c) => c
     case Failure(t) =>
-      fail(s"Bad web server configuration: ${t.getMessage}")
+      val message =
+        if t.getMessage != null then t.getMessage
+        else t.toString
+      fail(s"Bad web server configuration: ${message}")
 
   private val server = WebServer(config)
 
