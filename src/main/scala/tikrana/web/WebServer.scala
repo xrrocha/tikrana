@@ -17,8 +17,7 @@ end WebServer
 
 case class WebServer(config: Config):
   private val rootHandler = RootHandler(config)
-  // FIXME Don't pass root handler this way
-  private var webServer = createServer(rootHandler)
+  private var webServer = createServer()
 
   def start(): Try[WebServer] =
     webServer
@@ -30,9 +29,7 @@ case class WebServer(config: Config):
     webServer = createServer(rootHandler)
     webServer.map(_ => this)
 
-  private def createServer(
-      rootHandler: RootHandler
-  ): Try[HttpServer] =
+  private def createServer(): Try[HttpServer] =
     Try:
       HttpServer.create(InetSocketAddress(config.address, config.port), 0)
     .peek: server =>
