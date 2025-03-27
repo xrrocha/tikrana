@@ -36,6 +36,12 @@ object Extensions:
         case _          => t
   end extension
 
+  // Throwable
+  extension (throwable: Throwable)
+    def errorMessage: String =
+      if throwable.getMessage != null then throwable.getMessage
+      else throwable.toString()
+
   // Logger
   extension (logger: Logger)
     def logt(level: Level, msg: => String, throwable: Throwable = null): Unit =
