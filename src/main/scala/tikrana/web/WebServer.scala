@@ -17,6 +17,7 @@ end WebServer
 
 case class WebServer(config: Config):
   private val rootHandler = RootHandler(config)
+
   private var webServer = createServer()
 
   def start(): Try[WebServer] =
@@ -26,12 +27,15 @@ case class WebServer(config: Config):
 
   def stop(): Try[WebServer] =
     webServer.peek(_.stop(config.stopDelay))
-    webServer = createServer(rootHandler)
+    webServer = createServer()
     webServer.map(_ => this)
 
   private def createServer(): Try[HttpServer] =
     Try:
-      HttpServer.create(InetSocketAddress(config.address, config.port), 0)
+      HttpServer.create(
+        InetSocketAddress(config.address, config.port),
+        config.stopDelay
+      )
     .peek: server =>
       // TODO Use config-provided executor
       server.setExecutor(null)
