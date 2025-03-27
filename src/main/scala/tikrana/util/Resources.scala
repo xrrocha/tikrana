@@ -30,17 +30,13 @@ object Resources:
 
   def getResourceAsStream(
       path: Filename,
-      classLoader: => ClassLoader = ctxClassLoader
+      classLoader: => ClassLoader = Utils.ctxClassLoader
   ): Option[InputStream] =
     Option(classLoader.getResourceAsStream(path))
 
   def getResource(
       path: Filename,
-      classLoader: => ClassLoader = ctxClassLoader
+      classLoader: => ClassLoader = Utils.ctxClassLoader
   ): Option[URL] =
     Option(classLoader.getResource(path))
-
-  // TODO Make ctxClassLoader a package-level def
-  def ctxClassLoader: ClassLoader =
-    Thread.currentThread().getContextClassLoader
 end Resources

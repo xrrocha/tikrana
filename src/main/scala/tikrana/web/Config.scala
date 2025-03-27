@@ -40,7 +40,7 @@ object Config:
         File(System.getProperty("user.dir"))
       ),
       basePackage: Option[Path] = None,
-      classLoader: ClassLoader = Thread.currentThread.getContextClassLoader
+      classLoader: ClassLoader = ctxClassLoader
   ): Try[Config] =
     Try:
       try
