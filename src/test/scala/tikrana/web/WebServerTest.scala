@@ -8,13 +8,13 @@ import java.net.URI
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"
 
-  private val config = WebServerConfig(
+  private val config = Config(
     address = "localhost",
     // TODO Select random unassigned port
     // InetSocketAddress: A port number of zero will let the system
     // pick up an ephemeral port in a bind operation
     port = 1234,
-    basePackage = packageName
+    basePackage = Some(packageName)
   )
 
   private val server = WebServer(config)

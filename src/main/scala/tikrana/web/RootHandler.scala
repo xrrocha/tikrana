@@ -47,15 +47,17 @@ trait ResourceLoader:
 object ResourceLoader:
   val DefaultMimeType = "application/octet-stream"
 
-class RootHandler(config: WebServerConfig) extends HttpHandler:
+class RootHandler(config: Config) extends HttpHandler:
   case class Entry(resource: Resource, handler: Handler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
-  private val loaders = Seq[ResourceLoader](
-    FileLoader(config.baseDirectory),
+  private val loaders:Seq[ResourceLoader] = Seq(
+    config.baseDirectory.map(FileLoader(_)),
     // TODO Make class loader configurable
-    ClasspathLoader(config.basePackage, ctxClassLoader)
+    config.basePackage.map(ClasspathLoader(_, config.classLoader))
   )
+    .filter(_.isDefined)
+    .map(_.get)
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes
 

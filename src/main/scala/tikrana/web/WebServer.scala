@@ -13,16 +13,12 @@ import scala.util.Try
 
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
-enum Protocol:
-  case HTTP, HTTPS
-  def scheme: String = toString.toLowerCase
-end Protocol
-
 object WebServer:
 end WebServer
 
-case class WebServer(config: WebServerConfig):
+case class WebServer(config: Config):
   private val rootHandler = RootHandler(config)
+  // FIXME Don't pass root handler this way
   private var webServer = createServer(rootHandler)
 
   def start(): Try[WebServer] =
@@ -50,19 +46,3 @@ case class WebServer(config: WebServerConfig):
         .logAsWarning(logger)
 end WebServer
 
-import java.io.File
-
-// TODO Add smart constructor to config companion object
-// TODO Configure executor for WebServer (w/virtual threads)
-case class WebServerConfig(
-    protocol: Protocol = Protocol.HTTP,
-    address: NetAddress,
-    port: NetPort,
-    stopDelay: Int = 0,
-    baseDirectory: Directory = File(System.getProperty("user.dir")),
-    basePackage: Path = "",
-    mimeTypes: Map[Extension, MimeType] = Map.empty
-):
-
-  lazy val uri = s"${protocol.scheme}://$address:$port"
-end WebServerConfig
