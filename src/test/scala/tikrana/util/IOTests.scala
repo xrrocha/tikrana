@@ -1,7 +1,8 @@
 package tikrana.util
 
-import scala.util.*
 import tikrana.util.Utils.*
+
+import scala.util.*
 
 class IOTest extends munit.FunSuite:
   test("Closeable works"):
@@ -10,7 +11,7 @@ class IOTest extends munit.FunSuite:
     var closed = false
 
     object myCloseable extends Closeable:
-      def close() =
+      def close(): Unit =
         closed = true
 
     val result =
@@ -19,4 +20,4 @@ class IOTest extends munit.FunSuite:
         42
 
     assert(closed)
-    assert(result.isRight)
+    assert(result.isSuccess)

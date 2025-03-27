@@ -1,64 +1,66 @@
 package tikrana.util
 
-import Fault.*
+import Types.*
 
-object IO:
-  import java.io.Closeable
-  import scala.util.Using
+import scala.util.{Success, Try, Failure, Using}
+import java.io.{Closeable, InputStream}
+import java.net.URL
+import java.util.logging.{Level, Logger}
 
-  type Filename = String
-  type Extension = String
-  type ByteArray = Array[Byte]
+object Extensions:
+  // Option
+  extension [T](o: Option[T])
+    def toTry(f: => Exception): Try[T] =
+      o match
+        case Some(t) => Success(t)
+        case None    => Failure(f)
+  end extension
 
+  // Try
+  extension [T](t: Try[T])
+    def peek(f: T => Unit): Try[T] =
+      t.foreach(f)
+      t
+    def peekFailure(f: Throwable => Unit): Try[T] =
+      t match
+        case Failure(t) => f(t)
+        case _          =>
+      t
+    def mapFailure(f: Throwable => Exception): Try[T] =
+      t match
+        case Failure(t) => Failure(f(t))
+        case _          => t
+  end extension
+
+  // Logger
+  extension (logger: Logger)
+    def logt(level: Level, msg: => String, throwable: Throwable = null): Unit =
+      logger.log(Level.FINE, throwable, () => msg)
+  end extension
+
+  // Closeable
   extension [A <: Closeable](closeable: A)
-    def use[B](f: A => B): Either[Throwable, B] =
-      Using(closeable)(f).toEither
+    def use[B](f: A => B): Try[B] =
+      Using(closeable)(f)
+  end extension
 
-object Net:
-  type Port = Int
-  type NetAddress = String
-  type DirectoryName = String
+  // InputStream
+  extension (inputStream: InputStream)
+    def readBytes(): Try[ByteArray] =
+      Using(inputStream)(_.readAllBytes())
+    def readText(): Try[String] =
+      inputStream
+        .readBytes()
+        .map(String(_, "UTF-8"))
+  end extension
 
-object Resources:
-  import IO.*
-  import java.net.URL
-  import java.io.{FileNotFoundException, InputStream}
-
-  def readResourceText(
-      path: Filename,
-      encoding: String = "UTF-8"
-  ): Either[Fault, String] =
-    readResource(path)
-      .map(String(_, encoding))
-
-  def readResource(path: Filename): Either[Fault, Array[Byte]] =
-    withResourceStream(path)(_.readAllBytes())
-      .mapLeft(Fault(s"Error while reading resource '$path'", _))
-
-  def withResourceStream[A](
-      path: Filename
-  )(
-      f: InputStream => A
-  ): Either[Throwable, A] =
-    getResourceAsStream(path)
-      .toRight(FileNotFoundException(s"No such resource: '$path'"))
-      .flatMap(_.use(f))
-
-  def openResource(path: Filename): Either[Fault, InputStream] =
-    getResourceAsStream(path)
-      .toRight(Fault(s"No such resource $path"))
-
-  def getResourceAsStream(
-      path: Filename,
-      classLoader: => ClassLoader = ctxClassLoader
-  ): Option[InputStream] =
-    Option(classLoader.getResourceAsStream(path))
-
-  def getResource(
-      path: Filename,
-      classLoader: => ClassLoader = ctxClassLoader
-  ): Option[URL] =
-    Option(classLoader.getResource(path))
-
-  def ctxClassLoader: ClassLoader =
-    Thread.currentThread().getContextClassLoader()
+  // URL
+  extension (u: URL)
+    def readText(): Try[String] =
+      Try(u.openStream())
+        .flatMap(_.readText())
+    def readBytes(): Try[ByteArray] =
+      Try(u.openStream())
+        .flatMap(_.readBytes())
+  end extension
+end Extensions

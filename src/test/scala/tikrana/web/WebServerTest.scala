@@ -1,28 +1,47 @@
 package tikrana.web
 
+import tikrana.util.Utils.*
+import tikrana.util.Resources.*
+
+import java.io.File
 import java.net.URI
 import scala.util.*
-import tikrana.util.Utils.*
 
 class WebServerTest extends munit.FunSuite:
-  val config = WebServerConfig(
-    address = "0.0.0.0",
-    port = 1234
+  val packageName = "static"
+
+  private val config = WebServerConfig(
+    address = "localhost",
+    // TODO Select random unassigned port
+    // InetSocketAddress: A port number of zero will let the system
+    // pick up an ephemeral port in a bind operation
+    port = 1234,
+    basePackages = Seq(packageName)
   )
+
   private val server = WebServer(config)
 
+  private val indexPage = readResourceText(s"$packageName/index.html")
+    .getOrElse(fail("Failed to read index page"))
+
   override def beforeEach(context: BeforeEach): Unit =
-    server.start()
+    server
+      .start()
+      .peekFailure(fault => fail(s"Failed to start server: $fault"))
 
   override def afterEach(context: AfterEach): Unit =
     server.stop()
 
-  test("Web server servers basic content"):
-    URI(config.uri)
-      .toURL()
+  test("Web server servers implicit index page"):
+    assertEquals(getPage(""), indexPage)
+
+  test("Web server serves named resource"):
+    assertEquals(getPage("index.html"), indexPage)
+
+  def getPage(location: String): String =
+    URI(s"${config.uri}/$location")
+      .toURL
       .openStream()
-      .let(Using(_)(_.readAllBytes()))
+      .let(_.use(_.readAllBytes()))
       .getOrElse(fail("Failed to read page"))
       .let(String(_, "UTF-8"))
-      .also: result =>
-        assertEquals(result, "<h1>In the works...</h1>")

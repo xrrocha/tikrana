@@ -1,16 +1,8 @@
 package tikrana.util
 
-import scala.util.{Failure, Success, Try, Using}
-
 object Utils:
-  export Fault.*
-  export Fault.LogOpt.*
-
-  export IO.*
-  export Net.*
-  export Resources.*
-
-  type Time = Long
+  export Types.*
+  export Extensions.*
 
   implicit class KLike[T](t: T):
     def let[R](f: T => R): R = f(t)
@@ -20,3 +12,4 @@ object Utils:
   def time[A](action: => A): (A, Long) =
     val startTime = System.currentTimeMillis()
     (action, System.currentTimeMillis() - startTime)
+end Utils
