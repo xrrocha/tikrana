@@ -32,10 +32,7 @@ case class WebServer(config: Config):
 
   private def createServer(): Try[HttpServer] =
     Try:
-      HttpServer.create(
-        InetSocketAddress(config.address, config.port),
-        config.stopDelay
-      )
+      HttpServer.create(config.address, config.stopDelay)
     .peek: server =>
       // TODO Use config-provided executor
       server.setExecutor(null)

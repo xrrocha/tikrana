@@ -16,15 +16,15 @@ end Protocol
 // TODO Configure executor for WebServer (w/virtual threads)
 case class Config private (
     protocol: Protocol,
-    address: NetAddress,
-    port: NetPort,
+    address: InetSocketAddress,
     stopDelay: Int,
     mimeTypes: Map[Extension, MimeType],
     baseDirectory: Option[Directory],
     basePackage: Option[Path],
     classLoader: ClassLoader
 ):
-  lazy val uri = s"${protocol.scheme}://$address:$port"
+  lazy val uri =
+    s"${protocol.scheme}://${address.getHostString}:${address.getPort}"
 end Config
 
 object Config:
@@ -34,21 +34,21 @@ object Config:
       port: NetPort = 1960,
       stopDelay: Int = 0,
       mimeTypes: Map[Extension, MimeType] = Map.empty,
-      baseDirectory: Option[Directory] = Some(
-        File(System.getProperty("user.dir"))
-      ),
+      baseDirectory: Option[DirectoryName] =
+        Some(System.getProperty("user.dir")),
       basePackage: Option[Path] = None,
       classLoader: ClassLoader = ctxClassLoader
   ): Try[Config] =
     Try:
-      try
-        InetSocketAddress(address, port)
-          .also: isa =>
-            if isa.isUnresolved then
-              logger.warning(s"Address '$address' is unresolved")
-      catch
-        case e: Exception =>
-          throw Fault(s"Invalid address/port: '$address:$port'", e)
+      val inetSocketAddress =
+        try
+          InetSocketAddress(address, port)
+            .also: isa =>
+              if isa.isUnresolved then
+                logger.warning(s"Address '$address' is unresolved")
+        catch
+          case e: Exception =>
+            throw Fault(s"Invalid address/port: '$address:$port'", e)
 
       require(stopDelay >= 0, "Stop delay cannot be negative")
 
@@ -60,6 +60,7 @@ object Config:
       require(
         baseDirectory.isEmpty ||
           baseDirectory
+          .map(File(_))
             .filter(dir => dir.isDirectory() && dir.canRead())
             .isDefined,
         s"Unreadable base directory: '${baseDirectory.get}'"
@@ -75,11 +76,10 @@ object Config:
 
       new Config(
         protocol,
-        address,
-        port,
+        inetSocketAddress,
         stopDelay,
         mimeTypes,
-        baseDirectory,
+        baseDirectory.map(File(_)),
         basePackage,
         classLoader
       )
