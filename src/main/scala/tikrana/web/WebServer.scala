@@ -23,6 +23,8 @@ case class WebServer(config: Config):
   def start(): Try[WebServer] =
     webServer
       .peek(_.start())
+      .peekFailure: t =>
+        logger.warning(s"Web server is invalid: ${t.errorMessage}")
       .map(_ => this)
 
   def stop(): Try[WebServer] =
@@ -39,6 +41,6 @@ case class WebServer(config: Config):
       server.createContext("/", rootHandler)
       logger.fine(s"Listening on ${config.uri}")
     .mapFailure: t =>
-      Fault(s"Error creating web webServer", t)
+      Fault(s"Error creating web webServer: ${t.errorMessage}")
         .logAsWarning(logger)
 end WebServer
