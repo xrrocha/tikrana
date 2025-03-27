@@ -23,7 +23,7 @@ class TryTest extends munit.FunSuite:
 
   test("peek works"):
     var i = 0
-    val result = 
+    val result =
       Try(42)
         .peek: v =>
           assertEquals(v, 42)
@@ -31,7 +31,6 @@ class TryTest extends munit.FunSuite:
     assert(result.isSuccess)
     assert(i == 1)
     assertEquals(result.get, 42)
-      
 
   test("peekLeft works"):
     var i = 0

@@ -1,7 +1,7 @@
 package tikrana.util
 
-import Extensions.*
-import Types.*
+import tikrana.util.Extensions.*
+import tikrana.util.Types.*
 
 import java.io.{FileNotFoundException, InputStream}
 import java.net.URL

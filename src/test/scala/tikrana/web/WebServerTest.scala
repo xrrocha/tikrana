@@ -1,11 +1,9 @@
 package tikrana.web
 
-import tikrana.util.Utils.*
 import tikrana.util.Resources.*
+import tikrana.util.Utils.*
 
-import java.io.File
 import java.net.URI
-import scala.util.*
 
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"
@@ -16,7 +14,7 @@ class WebServerTest extends munit.FunSuite:
     // InetSocketAddress: A port number of zero will let the system
     // pick up an ephemeral port in a bind operation
     port = 1234,
-    basePackages = Seq(packageName)
+    basePackage = packageName
   )
 
   private val server = WebServer(config)
@@ -39,8 +37,7 @@ class WebServerTest extends munit.FunSuite:
     assertEquals(getPage("index.html"), indexPage)
 
   def getPage(location: String): String =
-    URI(s"${config.uri}/$location")
-      .toURL
+    URI(s"${config.uri}/$location").toURL
       .openStream()
       .let(_.use(_.readAllBytes()))
       .getOrElse(fail("Failed to read page"))
