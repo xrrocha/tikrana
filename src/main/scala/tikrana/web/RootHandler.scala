@@ -1,19 +1,16 @@
 package tikrana.web
 
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpHandler
-import java.io.File
-import java.io.FileInputStream
-import java.util.logging.Level
-import java.util.logging.Level.FINE
-import java.util.logging.Logger
-import scala.collection.mutable
-import scala.util.Success
-import scala.util.Try
+import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
+
+import java.io.{File, FileInputStream}
+import java.util.logging.Level
+import java.util.logging.Level.FINE
+import scala.collection.mutable
+import scala.util.{Success, Try}
 
 trait Resource:
   def contents(): Try[ByteArray]
@@ -73,8 +70,7 @@ class RootHandler(config: Config) extends HttpHandler:
           Handler.NotFound
         else if resource.hasChangedSince(time) then
           buildHandlerFor(path, resource)
-        else
-          sameHandler
+        else sameHandler
       case None =>
         buildHandlerFor(path)
   end getHandler
@@ -90,7 +86,7 @@ class RootHandler(config: Config) extends HttpHandler:
       case Some(resource) =>
         buildHandlerFor(path, resource)
       case None =>
-        logger.fine(s"Resource not found: $path")
+        logger.finer(s"Resource not found: $path")
         Handler.NotFound
   end buildHandlerFor
 
@@ -141,7 +137,7 @@ class FileResource(file: File) extends Resource:
 
   override def stillExists(): Boolean =
     // TODO Consider mapping !file.canRead() to UNAUTHORIZED
-    file.exists() && file.canRead()
+    file.exists() && file.canRead
   override def hasChangedSince(time: Millis): Boolean =
     file.lastModified() > time
 end FileResource

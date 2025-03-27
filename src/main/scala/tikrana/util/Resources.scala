@@ -1,11 +1,11 @@
 package tikrana.util
 
-import java.io.FileNotFoundException
-import java.io.InputStream
-import java.net.URL
-import scala.util.Try
 import tikrana.util.Extensions.*
 import tikrana.util.Types.*
+
+import java.io.{FileNotFoundException, InputStream}
+import java.net.URL
+import scala.util.Try
 
 object Resources:
   def readResourceText(

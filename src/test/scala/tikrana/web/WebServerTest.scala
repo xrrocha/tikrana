@@ -1,10 +1,10 @@
 package tikrana.web
 
-import java.net.URI
-import scala.util.Failure
-import scala.util.Success
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
+
+import java.net.URI
+import scala.util.{Failure, Success}
 
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"
@@ -23,7 +23,7 @@ class WebServerTest extends munit.FunSuite:
       val message =
         if t.getMessage != null then t.getMessage
         else t.toString
-      fail(s"Bad web server configuration: ${message}")
+      fail(s"Bad web server configuration: $message")
 
   private val server = WebServer(config)
 

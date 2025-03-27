@@ -1,7 +1,8 @@
 package tikrana.util
 
-import scala.util.*
 import tikrana.util.Utils.*
+
+import scala.util.*
 
 class TryTest extends munit.FunSuite:
   test("mapFailure works"):

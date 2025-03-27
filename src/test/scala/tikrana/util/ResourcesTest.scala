@@ -1,8 +1,9 @@
 package tikrana.util
 
-import scala.util.*
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
+
+import scala.util.*
 
 class ResourcesTest extends munit.FunSuite:
   test("Reads existing resource"):

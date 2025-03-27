@@ -1,15 +1,11 @@
 package tikrana.util
 
-import java.io.Closeable
-import java.io.InputStream
-import java.net.URL
-import java.util.logging.Level
-import java.util.logging.Logger
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.util.Using
 import tikrana.util.Types.*
+
+import java.io.{Closeable, InputStream}
+import java.net.URL
+import java.util.logging.{Level, Logger}
+import scala.util.{Failure, Success, Try, Using}
 
 object Extensions:
   // Option
@@ -40,7 +36,7 @@ object Extensions:
   extension (throwable: Throwable)
     def errorMessage: String =
       if throwable.getMessage != null then throwable.getMessage
-      else throwable.toString()
+      else throwable.toString
   end extension
 
   extension (string: String)

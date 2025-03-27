@@ -1,12 +1,13 @@
 package tikrana.web
 
+import tikrana.util.Fault
+import tikrana.util.Resources.getResource
+import tikrana.util.Utils.*
+
 import java.io.File
 import java.net.InetSocketAddress
 import scala.annotation.threadUnsafe
 import scala.util.Try
-import tikrana.util.Fault
-import tikrana.util.Resources.getResource
-import tikrana.util.Utils.*
 
 enum Protocol:
   case HTTP, HTTPS
@@ -62,16 +63,13 @@ object Config:
         baseDirectory.isEmpty ||
           baseDirectory
             .map(File(_))
-            .filter(dir => dir.isDirectory() && dir.canRead())
-            .isDefined,
+            .exists(dir => dir.isDirectory && dir.canRead),
         s"Unreadable base directory: '${baseDirectory.get}'"
       )
 
       require(
         basePackage.isEmpty ||
-          basePackage
-            .filter(pkg => getResource(s"$pkg/", classLoader).isDefined)
-            .isDefined,
+          basePackage.exists(pkg => getResource(s"$pkg/", classLoader).isDefined),
         s"Unreadable base package: '${basePackage.get}'"
       )
 
