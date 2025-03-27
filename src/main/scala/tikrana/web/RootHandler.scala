@@ -12,17 +12,16 @@ import java.util.logging.Level.FINE
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
+trait Handler:
+  // no-op for now, will server dynamic content later on
+  def handle(exchange: HttpExchange): Try[Result]
+object Handler:
+  val NotFound: Handler = _ => Success(Result.NotFound)
+
 trait Resource:
   def contents(): Try[ByteArray]
   def stillExists(): Boolean
   def hasChangedSince(time: Millis): Boolean
-
-trait Handler:
-  // Handler.handle is a no-op for now
-  // will server dynamic content later on
-  def handle(exchange: HttpExchange): Try[Result]
-object Handler:
-  val NotFound: Handler = _ => Success(Result.NotFound)
 
 trait ResourceLoader:
   def load(path: Path): Option[Resource]

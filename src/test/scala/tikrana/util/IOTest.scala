@@ -2,8 +2,6 @@ package tikrana.util
 
 import tikrana.util.Utils.*
 
-import scala.util.*
-
 class IOTest extends munit.FunSuite:
   test("Closeable works"):
     import java.io.Closeable

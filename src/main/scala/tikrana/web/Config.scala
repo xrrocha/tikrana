@@ -6,7 +6,6 @@ import tikrana.util.Utils.*
 
 import java.io.File
 import java.net.InetSocketAddress
-import scala.annotation.threadUnsafe
 import scala.util.Try
 
 enum Protocol:
@@ -69,7 +68,9 @@ object Config:
 
       require(
         basePackage.isEmpty ||
-          basePackage.exists(pkg => getResource(s"$pkg/", classLoader).isDefined),
+          basePackage.exists(pkg =>
+            getResource(s"$pkg/", classLoader).isDefined
+          ),
         s"Unreadable base package: '${basePackage.get}'"
       )
 
