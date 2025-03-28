@@ -28,6 +28,7 @@ case class Config private (
 end Config
 
 object Config:
+  // TODO Collect all errors in a single exception
   def apply(
       protocol: Protocol = Protocol.HTTP,
       address: NetAddress = "127.0.0.0",

@@ -14,6 +14,8 @@ protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
 // TODO Support HTTPS
 case class WebServer(config: Config):
+  import config.* 
+
   private val rootHandler = RootHandler(config)
 
   private var webServer = createServer()
@@ -26,18 +28,18 @@ case class WebServer(config: Config):
       .map(_ => this)
 
   def stop(): Try[WebServer] =
-    webServer.peek(_.stop(config.stopDelay))
+    webServer.peek(_.stop(stopDelay))
     webServer = createServer()
     webServer.map(_ => this)
 
   private def createServer(): Try[HttpServer] =
     Try:
-      HttpServer.create(config.address, config.stopDelay)
+      HttpServer.create(address, stopDelay)
     .peek: server =>
       // TODO Use config-provided executor
       server.setExecutor(null)
       server.createContext("/", rootHandler)
-      logger.fine(s"Listening on ${config.uri}")
+      logger.fine(s"Listening on $uri")
     .mapFailure: t =>
       Fault(s"Error creating web webServer: ${t.errorMessage}")
         .logAsWarning(logger)
