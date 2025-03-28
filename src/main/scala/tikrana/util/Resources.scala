@@ -9,34 +9,34 @@ import scala.util.Try
 
 object Resources:
   def readResourceText(
-      path: Filename,
+      filename: Filename,
       encoding: String = "UTF-8"
   ): Try[String] =
-    readResource(path)
+    readResource(filename)
       .map(String(_, encoding))
 
-  def readResource(path: Filename): Try[Array[Byte]] =
-    withResourceStream(path)(_.readAllBytes())
-      .mapFailure(Fault(s"Error while reading resource '$path'", _))
+  def readResource(filename: Filename): Try[Array[Byte]] =
+    withResourceStream(filename)(_.readAllBytes())
+      .mapFailure(Fault(s"Error while reading resource '$filename'", _))
 
-  def withResourceStream[A](path: Filename)(f: InputStream => A): Try[A] =
-    getResourceAsStream(path)
-      .toTry(FileNotFoundException(s"No such resource: '$path'"))
+  def withResourceStream[A](filename: Filename)(f: InputStream => A): Try[A] =
+    getResourceAsStream(filename)
+      .toTry(FileNotFoundException(s"No such resource: '$filename'"))
       .flatMap(is => Try(f(is)))
 
-  def openResource(path: Filename): Try[InputStream] =
-    getResourceAsStream(path)
-      .toTry(Fault(s"No such resource $path"))
+  def openResource(filename: Filename): Try[InputStream] =
+    getResourceAsStream(filename)
+      .toTry(Fault(s"No such resource $filename"))
 
   def getResourceAsStream(
-      path: Filename,
+      filename: Filename,
       classLoader: => ClassLoader = Utils.ctxClassLoader
   ): Option[InputStream] =
-    Option(classLoader.getResourceAsStream(path))
+    Option(classLoader.getResourceAsStream(filename))
 
   def getResource(
-      path: Filename,
+      filename: Filename,
       classLoader: => ClassLoader = Utils.ctxClassLoader
   ): Option[URL] =
-    Option(classLoader.getResource(path))
+    Option(classLoader.getResource(filename))
 end Resources

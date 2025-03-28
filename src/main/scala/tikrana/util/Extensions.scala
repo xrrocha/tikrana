@@ -39,17 +39,18 @@ object Extensions:
       else throwable.toString
   end extension
 
+  // Logger
+  extension (logger: Logger)
+    def logt(level: Level, msg: => String, throwable: Throwable = null): Unit =
+      logger.log(Level.FINE, throwable, () => msg)
+  end extension
+
+  // String
   extension (string: String)
     def extension: Option[Extension] =
       val pos = string.lastIndexOf('.')
       if pos < 0 then None
       else Some(string.substring(pos + 1))
-  end extension
-
-  // Logger
-  extension (logger: Logger)
-    def logt(level: Level, msg: => String, throwable: Throwable = null): Unit =
-      logger.log(Level.FINE, throwable, () => msg)
   end extension
 
   // Closeable
@@ -62,10 +63,10 @@ object Extensions:
   extension (inputStream: InputStream)
     def readBytes(): Try[ByteArray] =
       Using(inputStream)(_.readAllBytes())
-    def readText(): Try[String] =
+    def readText(encoding: String = "UTF-8"): Try[String] =
       inputStream
         .readBytes()
-        .map(String(_, "UTF-8"))
+        .map(String(_, encoding))
   end extension
 
   // URL

@@ -1,5 +1,6 @@
 package tikrana.web
 
+// FIXME Path may be a bad choice: it clashes w/java.nio.file.Path`
 type Path = String
 
 type MimeType = String

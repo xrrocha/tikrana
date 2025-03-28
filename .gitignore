@@ -1,11 +1,12 @@
-./trikrana
 *.log
 *.swp
-test.*
+./trikrana
 .DS_Store
 .bsp
 .idea/
 .local/
 .metals
 .scala-build
+.vscode
+test.*
 ~*.*

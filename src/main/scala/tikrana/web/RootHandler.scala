@@ -38,6 +38,7 @@ class RootHandler(config: Config) extends HttpHandler:
 
   private val loaders: Seq[ResourceLoader] = Seq(
     config.baseDirectory.map(FileLoader(_)),
+    // TODO This probably belongs in config preprocessing
     config.basePackage.flatMap: packageName =>
       getResource(s"$packageName/")
         .map: url =>
@@ -118,6 +119,7 @@ class RootHandler(config: Config) extends HttpHandler:
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>
           logger.logt(FINE, s"Error reading resource '$path'", exc)
+    // TODO Evict cache entries after some time-to-live
     cache(path) = (
       Entry(resource, handler),
       System.currentTimeMillis
@@ -205,4 +207,5 @@ def directory2Html(filenames: => Seq[Filename]): String =
 end directory2Html
 
 // TODO Actually escape html
+// TODO Define an escaping string interpolator for html"..."
 def escapeHtml(html: String): String = html

@@ -39,7 +39,7 @@ class WebServerTest extends munit.FunSuite:
     server.stop()
 
   test("Web server servers directories from classpath".ignore):
-    println("TODO: Web server servers directories from classpath")
+    ???
 
   test("Web server servers implicit index page"):
     assertEquals(getPage(""), indexPage)
