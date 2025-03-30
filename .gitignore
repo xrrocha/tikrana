@@ -1,7 +1,5 @@
 *.log
 *.swp
-./tmp/
-./trikrana
 .DS_Store
 .bsp/
 .idea/
@@ -12,4 +10,6 @@
 test.*
 tikrana-test.jar
 tikrana.jar
+tmp/
+trikrana
 ~*.*
