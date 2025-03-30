@@ -15,5 +15,4 @@
 //> using test.dep org.scalameta::munit::1.1.0
 //> using test.dep com.h2database:h2:2.3.232
 //> using test.dep org.apache.commons:commons-dbcp2:2.13.0
-//> using jar src/test/resources/tikrana-static.jar
 //> using test.jar src/test/resources/tikrana-static.jar
