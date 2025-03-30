@@ -8,13 +8,6 @@ import java.util.logging.{Level, Logger}
 import scala.util.{Failure, Success, Try, Using}
 
 object Extensions:
-  // Option
-  extension [T](o: Option[T])
-    def toTry(f: => Exception): Try[T] =
-      o.map(Success(_))
-        .getOrElse(Failure(f))
-  end extension
-
   // Try
   extension [T](t: Try[T])
     def peek(f: T => Unit): Try[T] =
