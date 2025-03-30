@@ -1,0 +1,1 @@
+scala package --library --force --output tikrana.jar project.scala src
