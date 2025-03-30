@@ -11,6 +11,7 @@ import java.util.logging.Level
 import java.util.logging.Level.FINE
 import scala.collection.mutable
 import scala.util.{Success, Try}
+import java.net.URL
 
 trait Handler:
   // no-op for now, will server dynamic content later on
@@ -168,18 +169,45 @@ class ClasspathLoader(
     val classLoader: ClassLoader
 ) extends ResourceLoader:
   override def load(path: Path): Option[Resource] =
-    getResource(s"$packageName/$path", classLoader)
-      .map: url =>
-        new Resource:
-          override def contents(): Try[ByteArray] =
-            Try(url.openStream().readAllBytes())
-              .mapFailure: t =>
-                Fault(s"Error reading resource: '$path'", t)
-                  .logAsWarning(logger)
-          override def stillExists(): Boolean =
-            true
-          override def hasChangedSince(time: Millis): Boolean =
-            false
+    def get(suffix: String): Option[URL] =
+      getResource(s"$packageName/$path$suffix", classLoader)
+
+    get("/")
+      .map: dirUrl =>
+        get(s"/${RootHandler.indexFile}")
+          .map(fileUrl => "file" -> fileUrl)
+          .orElse(Some("dir" -> dirUrl))
+      .orElse:
+        get(s"/$path")
+          .map(fileUrl => Some("file" -> fileUrl))
+      .flatten
+      .map: (kind, url) =>
+        (kind, url) match
+          case ("file", url) => FileClasspathResource(url)
+          case ("dir", url)  => DirectoryClasspathResource(url)
+  end load
+
+  class DirectoryClasspathResource(url: URL) extends Resource:
+    override def contents(): Try[ByteArray] =
+      // TODO Collect all jar entries & render as dir html
+      ???
+    override def stillExists(): Boolean =
+      true
+    override def hasChangedSince(time: Millis): Boolean =
+      false
+  end DirectoryClasspathResource
+
+  class FileClasspathResource(url: URL) extends Resource:
+    override def contents(): Try[ByteArray] =
+      Try(url.openStream().readAllBytes())
+        .mapFailure: t =>
+          Fault(s"Error reading resource: '$url'", t)
+            .logAsWarning(logger)
+    override def stillExists(): Boolean =
+      true
+    override def hasChangedSince(time: Millis): Boolean =
+      false
+  end FileClasspathResource
 end ClasspathLoader
 
 // TODO Move html functions to proper location

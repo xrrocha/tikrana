@@ -8,5 +8,7 @@
 .metals
 .scala-build
 .vscode
+other/
 test.*
+tikrana-test.jar
 ~*.*
