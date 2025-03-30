@@ -1,8 +1,17 @@
 package tikrana.util
 
+import extension.*
+
 object Utils:
   export Types.*
-  export Extensions.*
+
+  export CloseableExtensions.*
+  export LoggerExtensions.*
+  export OptionExtensions.*
+  export StringExtensions.*
+  export ThrowableExtensions.*
+  export TryExtensions.*
+  export UrlExtensions.*
 
   implicit class KLike[T](t: T):
     def let[R](f: T => R): R = f(t)
