@@ -11,8 +11,7 @@ object Extensions:
   // Option
   extension [T](o: Option[T])
     def toTry(f: => Exception): Try[T] =
-      o 
-        .map(Success(_))
+      o.map(Success(_))
         .getOrElse(Failure(f))
   end extension
 

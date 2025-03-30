@@ -4,18 +4,18 @@ import tikrana.util.Utils.*
 
 class IOTest extends munit.FunSuite:
   test("Closeable works"):
-    import java.io.Closeable
+      import java.io.Closeable
 
-    var closed = false
+      var closed = false
 
-    object myCloseable extends Closeable:
-      def close(): Unit =
-        closed = true
+      object myCloseable extends Closeable:
+        def close(): Unit =
+          closed = true
 
-    val result =
-      myCloseable.use: _ =>
-        assert(!closed)
-        42
+      val result =
+        myCloseable.use: _ =>
+            assert(!closed)
+            42
 
-    assert(closed)
-    assert(result.isSuccess)
+      assert(closed)
+      assert(result.isSuccess)

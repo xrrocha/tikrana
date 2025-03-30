@@ -41,11 +41,11 @@ class RootHandler(config: Config) extends HttpHandler:
     config.baseDirectory.map(FileLoader(_)),
     // TODO This probably belongs in config preprocessing
     config.basePackage.flatMap: packageName =>
-      getResource(s"$packageName/")
-        .map: url =>
-          val uri = url.toURI
-          if uri.getScheme == "file" then FileLoader(File(uri))
-          else ClasspathLoader(packageName, config.classLoader)
+        getResource(s"$packageName/")
+          .map: url =>
+            val uri = url.toURI
+            if uri.getScheme == "file" then FileLoader(File(uri))
+            else ClasspathLoader(packageName, config.classLoader)
   )
     .filter(_.isDefined)
     .map(_.get)
@@ -150,13 +150,13 @@ end FileLoader
 class FileResource(file: File) extends Resource:
   override def contents(): Try[ByteArray] =
     Try:
-      if file.isFile then FileInputStream(file).readAllBytes()
-      else
-        directory2Html(file.listFiles().toList.map(_.getName))
-          .getBytes("UTF-8")
-    .mapFailure: t =>
-      Fault(s"Error reading file '${file.getAbsolutePath}'", t)
-        .logAsWarning(logger)
+        if file.isFile then FileInputStream(file).readAllBytes()
+        else
+          directory2Html(file.listFiles().toList.map(_.getName))
+            .getBytes("UTF-8")
+      .mapFailure: t =>
+        Fault(s"Error reading file '${file.getAbsolutePath}'", t)
+          .logAsWarning(logger)
   override def stillExists(): Boolean =
     file.exists() && file.canRead
   override def hasChangedSince(time: Millis): Boolean =

@@ -42,47 +42,47 @@ object Config:
       classLoader: ClassLoader = ctxClassLoader
   ): Try[Config] =
     Try:
-      val inetSocketAddress =
-        try
-          InetSocketAddress(address, port)
-            .also: isa =>
-              if isa.isUnresolved then
-                logger.warning(s"Address '$address' is unresolved")
-        catch
-          case e: Exception =>
-            throw Fault(s"Invalid address/port: '$address:$port'", e)
+        val inetSocketAddress =
+          try
+            InetSocketAddress(address, port)
+              .also: isa =>
+                if isa.isUnresolved then
+                  logger.warning(s"Address '$address' is unresolved")
+          catch
+            case e: Exception =>
+              throw Fault(s"Invalid address/port: '$address:$port'", e)
 
-      require(stopDelay >= 0, "Stop delay cannot be negative")
+        require(stopDelay >= 0, "Stop delay cannot be negative")
 
-      require(
-        baseDirectory.isDefined || basePackage.isDefined,
-        "Either base directory and/or base package must be defined"
-      )
+        require(
+          baseDirectory.isDefined || basePackage.isDefined,
+          "Either base directory and/or base package must be defined"
+        )
 
-      require(
-        baseDirectory.isEmpty ||
-          baseDirectory
-            .map(File(_))
-            .exists(dir => dir.isDirectory && dir.canRead),
-        s"Unreadable base directory: '${baseDirectory.get}'"
-      )
+        require(
+          baseDirectory.isEmpty ||
+            baseDirectory
+              .map(File(_))
+              .exists(dir => dir.isDirectory && dir.canRead),
+          s"Unreadable base directory: '${baseDirectory.get}'"
+        )
 
-      require(
-        basePackage.isEmpty ||
-          basePackage.exists(pkg =>
-            getResource(s"$pkg/", classLoader).isDefined
-          ),
-        s"Unreadable base package: '${basePackage.get}'"
-      )
+        require(
+          basePackage.isEmpty ||
+            basePackage.exists(pkg =>
+              getResource(s"$pkg/", classLoader).isDefined
+            ),
+          s"Unreadable base package: '${basePackage.get}'"
+        )
 
-      new Config(
-        protocol,
-        inetSocketAddress,
-        stopDelay,
-        mimeTypes,
-        baseDirectory.map(File(_)),
-        basePackage,
-        classLoader
-      )
+        new Config(
+          protocol,
+          inetSocketAddress,
+          stopDelay,
+          mimeTypes,
+          baseDirectory.map(File(_)),
+          basePackage,
+          classLoader
+        )
   end apply
 end Config

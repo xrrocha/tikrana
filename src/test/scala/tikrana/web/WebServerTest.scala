@@ -39,17 +39,17 @@ class WebServerTest extends munit.FunSuite:
     server.stop()
 
   test("Web server servers directories from classpath".ignore):
-    ???
+      ???
 
   test("Web server servers implicit index page"):
-    assertEquals(getPage(""), indexPage)
+      assertEquals(getPage(""), indexPage)
 
   test("Web server serves named resource"):
-    assertEquals(getPage("index.html"), indexPage)
+      assertEquals(getPage("index.html"), indexPage)
 
   test("Web server servers directory with no index file"):
-    val expectedSubdir: String =
-      """
+      val expectedSubdir: String =
+        """
       |<html>
       |<head>
       |  <meta charset='UTF-8'>
@@ -61,7 +61,7 @@ class WebServerTest extends munit.FunSuite:
       |</body>
       |</html>
       |""".stripMargin
-    assertEquals(getPage("subdir"), expectedSubdir)
+      assertEquals(getPage("subdir"), expectedSubdir)
 
   def getPage(location: String): String =
     URI(s"${config.uri}/$location").toURL

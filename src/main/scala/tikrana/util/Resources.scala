@@ -5,28 +5,16 @@ import tikrana.util.Types.*
 
 import java.io.{FileNotFoundException, InputStream}
 import java.net.URL
-import scala.util.{Failure, Success, Try}
+
+import scala.util.{Failure, Success, Try, Using}
 
 object Resources:
-  def readResourceText(
+
+  def getResource(
       filename: Filename,
-      encoding: String = "UTF-8"
-  ): Try[String] =
-    readResource(filename)
-      .map(String(_, encoding))
-
-  def readResource(filename: Filename): Try[Array[Byte]] =
-    withResourceStream(filename)(_.readAllBytes())
-      .mapFailure(Fault(s"Error while reading resource '$filename'", _))
-
-  def withResourceStream[A](filename: Filename)(f: InputStream => A): Try[A] =
-    getResourceAsStream(filename)
-      .toTry(FileNotFoundException(s"No such resource: '$filename'"))
-      .flatMap(is => Try(f(is)))
-
-  def openResource(filename: Filename): Try[InputStream] =
-    getResourceAsStream(filename)
-      .toTry(Fault(s"No such resource $filename"))
+      classLoader: => ClassLoader = Utils.ctxClassLoader
+  ): Option[URL] =
+    Option(classLoader.getResource(filename))
 
   def getResourceAsStream(
       filename: Filename,
@@ -34,19 +22,23 @@ object Resources:
   ): Option[InputStream] =
     Option(classLoader.getResourceAsStream(filename))
 
-  def tryGetResource(
-      filename: Filename,
-      classLoader: => ClassLoader = Utils.ctxClassLoader
-  ): Try[URL] =
-    getResource(filename, classLoader)
-      .map(Success(_))
-      .getOrElse:
-        Failure:
-          FileNotFoundException(s"No such resource: $filename")
+  def openResource(filename: Filename): Try[InputStream] =
+    getResourceAsStream(filename)
+      .toTry(FileNotFoundException(s"No such resource $filename"))
 
-  def getResource(
+  def readResource(filename: Filename): Try[Array[Byte]] =
+    for
+      inputStream <- openResource(filename)
+      readLambda = (is: InputStream) => is.readAllBytes()
+      bytes <- Using(inputStream)(readLambda)
+    yield bytes
+
+  def readResourceText(
       filename: Filename,
-      classLoader: => ClassLoader = Utils.ctxClassLoader
-  ): Option[URL] =
-    Option(classLoader.getResource(filename))
+      encoding: String = "UTF-8"
+  ): Try[String] =
+    for
+      bytes <- readResource(filename)
+      text = String(bytes, encoding)
+    yield text
 end Resources
