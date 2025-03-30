@@ -5,7 +5,7 @@ import tikrana.util.Types.*
 
 import java.io.{FileNotFoundException, InputStream}
 import java.net.URL
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object Resources:
   def readResourceText(
@@ -33,6 +33,16 @@ object Resources:
       classLoader: => ClassLoader = Utils.ctxClassLoader
   ): Option[InputStream] =
     Option(classLoader.getResourceAsStream(filename))
+
+  def tryGetResource(
+      filename: Filename,
+      classLoader: => ClassLoader = Utils.ctxClassLoader
+  ): Try[URL] =
+    getResource(filename, classLoader)
+      .map(Success(_))
+      .getOrElse:
+        Failure:
+          FileNotFoundException(s"No such resource: $filename")
 
   def getResource(
       filename: Filename,
