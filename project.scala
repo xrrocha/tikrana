@@ -13,6 +13,4 @@
 //> using dep org.scala-lang::scala3-compiler::3.6.4
 
 //> using test.dep org.scalameta::munit::1.1.0
-//> using test.dep com.h2database:h2:2.3.232
-//> using test.dep org.apache.commons:commons-dbcp2:2.13.0
 //> using test.jar src/test/resources/tikrana-test.jar
