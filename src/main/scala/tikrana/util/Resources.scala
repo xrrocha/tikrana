@@ -1,12 +1,13 @@
 package tikrana.util
 
-import tikrana.util.Extensions.*
 import tikrana.util.Types.*
+import tikrana.util.extension.OptionExtensions.*
+import tikrana.util.extension.TryExtensions.*
 
 import java.io.{FileNotFoundException, InputStream}
 import java.net.URL
 
-import scala.util.{Failure, Success, Try, Using}
+import scala.util.{Try, Using}
 
 object Resources:
 
@@ -29,8 +30,8 @@ object Resources:
   def readResource(filename: Filename): Try[Array[Byte]] =
     for
       inputStream <- openResource(filename)
-      readLambda = (is: InputStream) => is.readAllBytes()
-      bytes <- Using(inputStream)(readLambda)
+      readBytes = (is: InputStream) => is.readAllBytes()
+      bytes <- Using(inputStream)(readBytes)
     yield bytes
 
   def readResourceText(
