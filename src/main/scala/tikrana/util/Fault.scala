@@ -5,7 +5,7 @@ import java.util.logging.{Level, Logger}
 class Fault(
     template: => String,
     val cause: Throwable | Null = null
-) extends Exception(template, cause):
+) extends RuntimeException(template, cause):
 
   lazy val message: String = template
 
