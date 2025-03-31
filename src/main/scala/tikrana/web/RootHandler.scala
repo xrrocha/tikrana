@@ -1,17 +1,20 @@
 package tikrana.web
 
-import com.sun.net.httpserver.{HttpExchange, HttpHandler}
+import Types.*
+
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
 
 import java.io.{File, FileInputStream}
+import java.net.URL
 import java.util.logging.Level
 import java.util.logging.Level.FINE
+import com.sun.net.httpserver.{HttpExchange, HttpHandler}
+
 import scala.collection.mutable
 import scala.util.{Success, Try}
-import java.net.URL
 
 trait Handler:
   // no-op for now, will server dynamic content later on

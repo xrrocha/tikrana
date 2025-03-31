@@ -1,5 +1,7 @@
 package tikrana.web
 
+import Types.*
+
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
 

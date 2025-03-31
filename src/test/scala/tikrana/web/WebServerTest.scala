@@ -1,5 +1,6 @@
 package tikrana.web
 
+import Types.*
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 

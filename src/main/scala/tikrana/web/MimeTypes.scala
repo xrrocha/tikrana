@@ -1,5 +1,7 @@
 package tikrana.web
 
+import Types.* 
+
 import tikrana.util.Utils.*
 
 val DefaultMimeTypes: Map[Extension, MimeType] = Map(
