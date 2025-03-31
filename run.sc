@@ -26,13 +26,13 @@ val outcome =
       baseDirectory = Some(System.getProperty("user.dir"))
     )
     webServer <- WebServer(config).start()
-    _ = logger.info(
+  yield
+    logger.info(
       s"Web sever running on ${config.uri}. Ctrl-C to shutdown..."
     )
-    _ = sys.addShutdownHook:
+    sys.addShutdownHook:
         logger.info("Shutting down...")
         webServer.stop()
-  yield ()
 
 outcome.peekFailure: t =>
   println(s"Error: ${t.errorMessage}")
