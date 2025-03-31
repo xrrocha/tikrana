@@ -33,7 +33,7 @@ object Config:
   // TODO Collect all errors in a single exception
   def apply(
       protocol: Protocol = Protocol.HTTP,
-      address: NetAddress = "127.0.0.0",
+      address: NetAddress = "127.0.0.1",
       port: NetPort = 1960,
       stopDelay: Int = 0,
       mimeTypes: Map[Extension, MimeType] = Map.empty,
