@@ -15,6 +15,7 @@ import scala.util.Try
 
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
+// TODO Add smart constructor to WebServer(config)
 // TODO Support HTTPS
 class WebServer(config: Config):
   import config.*
