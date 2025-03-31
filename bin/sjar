@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-set -e
-
-scala clean project.scala src
-scala compile project.scala src
-scala test project.scala src
-scala package --library --force --output tikrana.jar project.scala src

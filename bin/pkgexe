@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -ex
+
+scala clean project.scala src
+scala compile project.scala src
+scala test project.scala src
+
+scala --power package \
+    project.scala src \
+    --output tikrana \
+    --force \
+    --graal -- \
+        --no-fallback \
+
+#        --enable-https \
+#        --target=windows-x64
+
+exit

@@ -11,8 +11,6 @@ class UtilsTest extends munit.FunSuite:
 
   test("KLike's 'let' and 'also' work as advertised"):
       var i = 0
-      val x: Either[String, Int] = Right(0)
-
       val result =
         (i + 2)
           .let: r =>
@@ -20,6 +18,5 @@ class UtilsTest extends munit.FunSuite:
           .also: r =>
             assert(r == 6)
             i = 5
-
       assert(i == 5)
       assert(result == 6)

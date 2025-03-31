@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-scala --power package project.scala src --force -o tikrana --graal

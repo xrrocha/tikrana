@@ -14,6 +14,7 @@ import scala.util.Try
 protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
 
 // TODO Support HTTPS
+// TODO Why is WebServer a case class?
 case class WebServer(config: Config):
   import config.*
 
@@ -45,3 +46,8 @@ case class WebServer(config: Config):
         Fault(s"Error creating web webServer: ${t.errorMessage}")
           .logAsWarning(logger)
 end WebServer
+
+object WebServer:
+  @main
+  def run() =
+    WebServer(Config().get)
