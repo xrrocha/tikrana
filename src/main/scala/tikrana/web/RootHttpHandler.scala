@@ -5,9 +5,7 @@ import Types.*
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-import tikrana.web.ResourceLoader.DefaultMimeType
-// TODO Check why this import is needed
-import tikrana.util.extension.LoggerExtensions.logl
+import tikrana.web.WebResourceLoader.DefaultMimeType
 
 import java.io.{File, FileInputStream}
 import java.net.URL
@@ -18,31 +16,31 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
-trait Handler:
+trait ExchangeHandler:
   // no-op for now, will server dynamic content later on
   def handle(exchange: HttpExchange): Try[Result]
-object Handler:
-  val NotFound: Handler = _ => Success(Result.NotFound)
+object ExchangeHandler:
+  val NotFound: ExchangeHandler = _ => Success(Result.NotFound)
 
-trait Resource:
+trait WebResource:
   def contents(): Try[ByteArray]
   def stillExists(): Boolean
   def hasChangedSince(time: Millis): Boolean
 
-trait ResourceLoader:
-  def load(path: Path): Option[Resource]
-object ResourceLoader:
+trait WebResourceLoader:
+  def load(path: Path): Option[WebResource]
+object WebResourceLoader:
   val DefaultMimeType = "application/octet-stream"
 
-object RootHandler:
+object RootHttpHandler:
   def indexFile: Path = "index.html"
-end RootHandler
+end RootHttpHandler
 
-class RootHandler(config: HandlerConfig) extends HttpHandler:
-  case class Entry(resource: Resource, handler: Handler)
+class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
+  case class Entry(resource: WebResource, handler: ExchangeHandler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
-  private val loaders: Seq[ResourceLoader] = Seq(
+  private val loaders: Seq[WebResourceLoader] = Seq(
     config.baseDirectory.map(FileLoader(_)),
     // TODO This probably belongs in config preprocessing
     config.basePackage.flatMap: packageName =>
@@ -78,14 +76,14 @@ class RootHandler(config: HandlerConfig) extends HttpHandler:
         logger.logl(FINE, s"Error handling exchange", exc)
   end handle
 
-  def getHandler(exchange: HttpExchange): Handler =
+  def getHandler(exchange: HttpExchange): ExchangeHandler =
     val path = getPath(exchange)
     cache.get(path) match
       case Some((Entry(resource, sameHandler), time)) =>
         if !resource.stillExists() then
           // TODO Remove all cache entries descending from path
           cache.remove(path)
-          Handler.NotFound
+          ExchangeHandler.NotFound
         else if resource.hasChangedSince(time) then
           buildHandlerFor(path, resource)
         else sameHandler
@@ -96,7 +94,7 @@ class RootHandler(config: HandlerConfig) extends HttpHandler:
   def getPath(exchange: HttpExchange): Path =
     exchange.getRequestURI.getPath.substring(1)
 
-  private def buildHandlerFor(path: Path): Handler =
+  private def buildHandlerFor(path: Path): ExchangeHandler =
     val loadedResource =
       LazyList
         .from(loaders)
@@ -108,17 +106,17 @@ class RootHandler(config: HandlerConfig) extends HttpHandler:
         buildHandlerFor(path, resource)
       case None =>
         logger.finer(s"Resource not found: $path")
-        Handler.NotFound
+        ExchangeHandler.NotFound
   end buildHandlerFor
 
-  private def buildHandlerFor(path: Path, resource: Resource): Handler =
+  private def buildHandlerFor(path: Path, resource: WebResource): ExchangeHandler =
     val mimeType =
       getFileType(path) match
         case Some(fileType) =>
           mimeTypes.getOrElse(fileType, DefaultMimeType)
         case None =>
           DefaultMimeType
-    val handler: Handler = _ =>
+    val handler: ExchangeHandler = _ =>
       resource
         .contents()
         .map: contents =>
@@ -135,24 +133,24 @@ class RootHandler(config: HandlerConfig) extends HttpHandler:
 
   private def getFileType(path: Path): Option[FileType] =
     path.extension
-end RootHandler
+end RootHttpHandler
 
 // TODO Pass default indexFile name as a parameter
-class FileLoader(val baseDirectory: Directory) extends ResourceLoader:
-  override def load(path: Path): Option[Resource] =
+class FileLoader(val baseDirectory: Directory) extends WebResourceLoader:
+  override def load(path: Path): Option[WebResource] =
     val file =
       if path.isEmpty then baseDirectory
       else File(baseDirectory, path)
     if !(file.exists() && file.canRead) then None
     else if file.isFile then Some(FileResource(file))
     else // Directory
-      val indexFile = File(file, RootHandler.indexFile)
+      val indexFile = File(file, RootHttpHandler.indexFile)
       if indexFile.isFile && indexFile.canRead then
         Some(FileResource(indexFile))
       else Some(FileResource(file))
 end FileLoader
 
-class FileResource(file: File) extends Resource:
+class FileResource(file: File) extends WebResource:
   override def contents(): Try[ByteArray] =
     Try:
         if file.isFile then FileInputStream(file).readAllBytes()
@@ -172,14 +170,14 @@ end FileResource
 class ClasspathLoader(
     val packageName: Path,
     val classLoader: ClassLoader
-) extends ResourceLoader:
-  override def load(path: Path): Option[Resource] =
+) extends WebResourceLoader:
+  override def load(path: Path): Option[WebResource] =
     def get(suffix: String): Option[URL] =
       getResource(s"$packageName/$path$suffix", classLoader)
 
     get("/")
       .map: dirUrl =>
-        get(s"/${RootHandler.indexFile}")
+        get(s"/${RootHttpHandler.indexFile}")
           .map(fileUrl => "file" -> fileUrl)
           .orElse(Some("dir" -> dirUrl))
       .orElse:
@@ -192,7 +190,7 @@ class ClasspathLoader(
           case ("dir", url)  => DirectoryClasspathResource(url)
   end load
 
-  class DirectoryClasspathResource(url: URL) extends Resource:
+  class DirectoryClasspathResource(url: URL) extends WebResource:
     override def contents(): Try[ByteArray] =
       // TODO Collect all jar entries & render as dir html
       ???
@@ -202,7 +200,7 @@ class ClasspathLoader(
       false
   end DirectoryClasspathResource
 
-  class FileClasspathResource(url: URL) extends Resource:
+  class FileClasspathResource(url: URL) extends WebResource:
     override def contents(): Try[ByteArray] =
       Try(url.openStream().readAllBytes())
         .mapFailure: t =>

@@ -7,6 +7,7 @@ import com.sun.net.httpserver.Filter
 import com.sun.net.httpserver.HttpServer
 
 import java.net.InetSocketAddress
+import java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor
 import java.util.logging.Level
 import java.util.logging.Logger
 import scala.util.{Failure, Success, Try}
@@ -21,7 +22,7 @@ class WebServer(config: Config):
   import config.*
 
   private var webServer: Option[HttpServer] = None
-  private lazy val rootHandler = RootHandler(handlerConfig)
+  private lazy val rootHandler = RootHttpHandler(handlerConfig)
 
   def start(): Try[WebServer] =
     logger.fine(s"Starting web server on $uri")
@@ -44,17 +45,21 @@ class WebServer(config: Config):
   end stop
 
   private def createServer(): Try[HttpServer] =
-    // Post-Java 18 there's a better API for creating servers
-    for server <- Try(HttpServer.create(address, backlog))
-    yield
-      // TODO Set up multithreaded executor
-      server.setExecutor(null)
-      server.createContext("/", rootHandler)
-      server
+    for server <- Try(
+        HttpServer.create(
+          address,
+          backlog,
+          "/",
+          rootHandler
+        )
+      )
+    yield server
+      .also(_.setExecutor(newVirtualThreadPerTaskExecutor()))
 end WebServer
 
 object WebServer:
-  // Minimal web server without custom configuration
+  // Minimal web server w/o custom configuration
+  // http://localhost:1960
   @main
   def run() =
     for

@@ -3,7 +3,7 @@ package tikrana.web
 import Types.*
 
 import tikrana.util.Utils.*
-import tikrana.web.ResourceLoader.DefaultMimeType
+import tikrana.web.WebResourceLoader.DefaultMimeType
 
 enum HttpCode(val code: Int, val message: String):
   case OK extends HttpCode(200, "OK")
