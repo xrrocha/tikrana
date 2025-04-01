@@ -1,8 +1,8 @@
 //> using scala 3.6.4
 //> using platform jvm
-//> using options -deprecation -release:17
+//> using options -deprecation -release:23
 
-//> using jvm graalvm-java17:22.3.1
+//> using jvm graalvm-java23:23.0.2
 //> using javaOpt -Xmx4g
 
 //> using resourceDir src/main/resources
