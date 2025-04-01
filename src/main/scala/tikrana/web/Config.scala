@@ -19,6 +19,7 @@ end Protocol
 case class Config private (
     protocol: Protocol,
     address: InetSocketAddress,
+    backlog: Int,
     stopDelay: Int,
     mimeTypes: Map[Extension, MimeType],
     baseDirectory: Option[Directory],
@@ -35,6 +36,7 @@ object Config:
       protocol: Protocol = Protocol.HTTP,
       address: NetAddress = "127.0.0.1",
       port: NetPort = 1960,
+      backlog: Int = 0,
       stopDelay: Int = 0,
       mimeTypes: Map[Extension, MimeType] = Map.empty,
       baseDirectory: Option[DirectoryName] = Some(
@@ -80,6 +82,7 @@ object Config:
         new Config(
           protocol,
           inetSocketAddress,
+          backlog,
           stopDelay,
           mimeTypes,
           baseDirectory.map(File(_)),

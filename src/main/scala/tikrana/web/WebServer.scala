@@ -1,61 +1,70 @@
 package tikrana.web
 
-import Types.* 
-
 import tikrana.util.Fault
 import tikrana.util.Utils.*
 
-import java.net.InetSocketAddress
-import java.util.logging.{Level, Logger}
+import com.sun.net.httpserver.Filter
 import com.sun.net.httpserver.HttpServer
 
-import scala.util.Try
+import java.net.InetSocketAddress
+import java.util.logging.Level
+import java.util.logging.Logger
+import scala.util.{Failure, Success, Try}
 
-protected val logger: Logger = Logger.getLogger("tikrana.web.WebServer")
+import Types.*
+import sttp.client4.BackendOptions.ProxyType.Http
 
-// TODO Add smart constructor to WebServer(config)
+protected val logger: Logger =
+  Logger.getLogger("tikrana.web.WebServer")
+
 // TODO Support HTTPS
 class WebServer(config: Config):
   import config.*
 
+  // TODO Pass a handler config object, not the whole config
   private val rootHandler = RootHandler(config)
 
-  private var webServer = createServer()
+  private var webServer: Option[HttpServer] = None
 
   def start(): Try[WebServer] =
-    webServer
-      .peek(_.start())
-      .peekFailure: t =>
-        logger.warning(s"Web server is invalid: ${t.errorMessage}")
-      .map(_ => this)
+    logger.fine(s"Starting web server on $uri")
+    for
+      server <- createServer()
+      _ <- Try(server.start())
+    yield
+      webServer = Some(server)
+      this
+  end start
 
-  def stop(): Try[WebServer] =
-    webServer.peek(_.stop(stopDelay))
-    webServer = createServer()
-    webServer.map(_ => this)
+  def stop(): Try[Unit] =
+    Try:
+        for server <- webServer
+        yield
+          logger.fine(s"Stopping web server")
+          server.stop(stopDelay)
+          webServer = None
+  end stop
 
   private def createServer(): Try[HttpServer] =
-    Try:
-        HttpServer.create(address, stopDelay)
-      .peek: server =>
-        // TODO Use config-provided executor
-        server.setExecutor(null)
-        server.createContext("/", rootHandler)
-        logger.fine(s"Listening on $uri")
-      .mapFailure: t =>
-        Fault(s"Error creating web webServer: ${t.errorMessage}")
-          .logAsWarning(logger)
+    // Post-Java 18 there's a better API for creating servers
+    for server <- Try(HttpServer.create(address, backlog))
+    yield
+      // TODO Set up multithreaded executor
+      server.setExecutor(null)
+      server.createContext("/", rootHandler)
+      server
 end WebServer
 
+// TODO Add smart constructor to WebServer(config)
 object WebServer:
   @main
   def run() =
-    for 
+    for
       config <- Config()
       server <- WebServer(config).start()
     do
       logger.info(s"Web server running on ${config.uri}. Ctrl-C to shutdown...")
       sys.addShutdownHook:
-        logger.info("Shutting down...")
-        server.stop()
+          logger.info("Shutting down...")
+          server.stop()
     end for
