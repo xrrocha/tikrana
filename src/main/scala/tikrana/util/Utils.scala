@@ -7,6 +7,7 @@ object Utils:
 
   export CloseableExtensions.*
   export LoggerExtensions.*
+  export LogManagerExtensions.*
   export OptionExtensions.*
   export StringExtensions.*
   export ThrowableExtensions.*
