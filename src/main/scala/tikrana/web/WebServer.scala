@@ -33,13 +33,14 @@ class WebServer(config: Config):
       this
   end start
 
-  def stop(): Try[Unit] =
-    Try:
-        for server <- webServer
-        yield
-          logger.fine(s"Stopping web server")
-          server.stop(stopDelay)
-          webServer = None
+  def stop(): Try[WebServer] =
+    logger.fine(s"Stopping web server on $uri")
+    for
+      server <- webServer.toTry(Fault("Web server not started"))
+      _ <- Try(server.stop(stopDelay))
+    yield
+      webServer = None
+      this
   end stop
 
   private def createServer(): Try[HttpServer] =
