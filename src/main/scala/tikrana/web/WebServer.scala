@@ -18,7 +18,7 @@ protected val logger: Logger =
   Logger.getLogger("tikrana.web.WebServer")
 
 // TODO Support HTTPS
-class WebServer(config: Config):
+class WebServer(config: ServerConfig):
   import config.*
 
   private var webServer: Option[HttpServer] = None
@@ -63,11 +63,11 @@ object WebServer:
   @main
   def run() =
     for
-      config <- Config()
+      config <- ServerConfig()
       server <- WebServer(config).start()
     do
       logger.info(s"Web server running on ${config.uri}. Ctrl-C to shutdown...")
-      // TODO Only `sys.runtime.addShutdownHook` is guaranteed to run
+      // TODO Only `sys.runtime.addShutdownHook` actually works...
       sys.addShutdownHook:
           logger.info(s"Shutting down web server at ${config.uri}...")
           server.stop()

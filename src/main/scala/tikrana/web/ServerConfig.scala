@@ -23,7 +23,7 @@ case class HandlerConfig private[web] (
 )
 
 // TODO Configure executor for WebServer (w/virtual threads)
-case class Config private (
+case class ServerConfig private (
     protocol: Protocol,
     address: InetSocketAddress,
     backlog: Int,
@@ -32,9 +32,9 @@ case class Config private (
 ):
   lazy val uri =
     s"${protocol.scheme}://${address.getHostString}:${address.getPort}"
-end Config
+end ServerConfig
 
-object Config:
+object ServerConfig:
   // TODO Collect all errors in a single exception
   def apply(
       protocol: Protocol = Protocol.HTTP,
@@ -48,7 +48,7 @@ object Config:
       ),
       basePackage: Option[Path] = None,
       classLoader: ClassLoader = ctxClassLoader
-  ): Try[Config] =
+  ): Try[ServerConfig] =
     Try:
         val inetSocketAddress =
           try
@@ -80,7 +80,7 @@ object Config:
           s"Unreadable base package: '${basePackage.get}'"
         )
 
-        new Config(
+        new ServerConfig(
           protocol,
           inetSocketAddress,
           backlog,
@@ -93,4 +93,4 @@ object Config:
           )
         )
   end apply
-end Config
+end ServerConfig

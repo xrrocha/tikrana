@@ -10,7 +10,7 @@ import scala.util.{Failure, Success}
 class WebServerTest extends munit.FunSuite:
   val packageName = "static"
 
-  private val config = Config(
+  private val config = ServerConfig(
     baseDirectory = None,
     basePackage = Some(packageName)
   ) match
