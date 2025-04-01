@@ -54,6 +54,7 @@ class WebServer(config: Config):
 end WebServer
 
 object WebServer:
+  // Minimal web server without custom configuration
   @main
   def run() =
     for
@@ -61,6 +62,7 @@ object WebServer:
       server <- WebServer(config).start()
     do
       logger.info(s"Web server running on ${config.uri}. Ctrl-C to shutdown...")
+      // TODO Only `sys.runtime.addShutdownHook` is guaranteed to run
       sys.addShutdownHook:
           logger.info(s"Shutting down web server at ${config.uri}...")
           server.stop()
