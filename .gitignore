@@ -1,5 +1,8 @@
 *.log
 *.swp
+./test.*
+./tikrana*
+./tmp/
 .DS_Store
 .bsp/
 .idea/
@@ -7,8 +10,5 @@
 .metals/
 .scala-build/
 .vscode/
-test.*
-tikrana*
-tmp/
-trikrana
+./tmp/
 ~*.*
