@@ -12,7 +12,6 @@ import java.util.logging.Logger
 import scala.util.{Failure, Success, Try}
 
 import Types.*
-import sttp.client4.BackendOptions.ProxyType.Http
 
 protected val logger: Logger =
   Logger.getLogger("tikrana.web.WebServer")
