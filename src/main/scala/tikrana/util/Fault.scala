@@ -5,9 +5,10 @@ import java.util.logging.{Level, Logger}
 class Fault(
     template: => String,
     val cause: Throwable | Null = null
-) extends RuntimeException(template, cause):
+) extends RuntimeException(cause):
 
-  lazy val message: String = template
+  def message: String = getMessage
+  override def getMessage: String = template
 
   def logAsSevere(logger: Logger): Fault =
     log(Level.SEVERE, logger)
