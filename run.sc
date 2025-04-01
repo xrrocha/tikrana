@@ -17,9 +17,7 @@ if args.length < 2 then
 
 val outcome =
   for
-    is <- openResource("logging.properties")
-    _ <- is.use(LogManager.getLogManager.readConfiguration(_))
-    logger = Logger.getLogger("tikrana.web.run")
+    _ <- LogManager.getLogManager.readConfiguration("logging.properties")
     config <- Config(
       address = args(0),
       port = args(1).toInt,
@@ -27,9 +25,8 @@ val outcome =
     )
     webServer <- WebServer(config).start()
   yield
-    logger.info(
-      s"Web sever running on ${config.uri}. Ctrl-C to shutdown..."
-    )
+    val logger = Logger.getLogger("tikrana.web.run")
+    logger.info(s"Web sever running on ${config.uri}. Ctrl-C to shutdown...")
     sys.addShutdownHook:
         logger.info("Shutting down...")
         webServer.stop()
