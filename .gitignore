@@ -2,7 +2,6 @@
 *.swp
 ./test.*
 ./tikrana*
-./tmp/
 .DS_Store
 .bsp/
 .idea/
@@ -10,4 +9,5 @@
 .metals/
 .scala-build/
 .vscode/
+tmp/
 ~*.*
