@@ -7,7 +7,7 @@ class Fault(
     val cause: Throwable | Null = null
 ) extends RuntimeException(cause):
 
-  def message: String = getMessage
+  lazy val message: String = getMessage
   override def getMessage: String = template
 
   def logAsSevere(logger: Logger): Fault =
