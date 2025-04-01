@@ -73,7 +73,7 @@ class RootHandler(config: Config) extends HttpHandler:
             Fault(s"I/O error handling ${exchange.getRequestURI}", t)
               .logAsWarning(logger)
       .peekFailure: exc =>
-        logger.logt(FINE, s"Error handling exchange", exc)
+        logger.logl(FINE, s"Error handling exchange", exc)
   end handle
 
   def getHandler(exchange: HttpExchange): Handler =
@@ -122,7 +122,7 @@ class RootHandler(config: Config) extends HttpHandler:
         .map: contents =>
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>
-          logger.logt(FINE, s"Error reading resource '$path'", exc)
+          logger.logl(FINE, s"Error reading resource '$path'", exc)
     // TODO Evict cache entries after some time-to-live
     cache(path) = (
       Entry(resource, handler),
