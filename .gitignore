@@ -10,5 +10,4 @@
 .metals/
 .scala-build/
 .vscode/
-./tmp/
 ~*.*
