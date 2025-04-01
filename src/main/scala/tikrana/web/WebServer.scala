@@ -34,7 +34,7 @@ class WebServer(config: Config):
   end start
 
   def stop(): Try[WebServer] =
-    logger.fine(s"Stopping web server on $uri")
+    logger.fine(s"Stopping web server at $uri")
     for
       server <- webServer.toTry(Fault("Web server not started"))
       _ <- Try(server.stop(stopDelay))
@@ -53,7 +53,6 @@ class WebServer(config: Config):
       server
 end WebServer
 
-// TODO Add smart constructor to WebServer(config)
 object WebServer:
   @main
   def run() =
@@ -63,6 +62,6 @@ object WebServer:
     do
       logger.info(s"Web server running on ${config.uri}. Ctrl-C to shutdown...")
       sys.addShutdownHook:
-          logger.info("Shutting down...")
+          logger.info(s"Shutting down web server at ${config.uri}...")
           server.stop()
     end for
