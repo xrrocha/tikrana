@@ -20,9 +20,8 @@ protected val logger: Logger =
 class WebServer(config: Config):
   import config.*
 
-  private lazy val rootHandler = RootHandler(handlerConfig)
-
   private var webServer: Option[HttpServer] = None
+  private lazy val rootHandler = RootHandler(handlerConfig)
 
   def start(): Try[WebServer] =
     logger.fine(s"Starting web server on $uri")
