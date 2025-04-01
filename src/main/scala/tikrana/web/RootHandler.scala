@@ -6,6 +6,8 @@ import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
 import tikrana.web.ResourceLoader.DefaultMimeType
+// TODO Check why this import is needed
+import tikrana.util.extension.LoggerExtensions.logl
 
 import java.io.{File, FileInputStream}
 import java.net.URL
@@ -36,7 +38,7 @@ object RootHandler:
   def indexFile: Path = "index.html"
 end RootHandler
 
-class RootHandler(config: Config) extends HttpHandler:
+class RootHandler(config: HandlerConfig) extends HttpHandler:
   case class Entry(resource: Resource, handler: Handler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 

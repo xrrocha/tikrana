@@ -21,7 +21,7 @@ class WebServer(config: Config):
   import config.*
 
   // TODO Pass a handler config object, not the whole config
-  private lazy val rootHandler = RootHandler(config)
+  private lazy val rootHandler = RootHandler(handlerConfig)
 
   private var webServer: Option[HttpServer] = None
 

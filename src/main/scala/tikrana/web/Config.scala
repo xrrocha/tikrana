@@ -15,16 +15,20 @@ enum Protocol:
   def scheme: String = toString.toLowerCase
 end Protocol
 
+case class HandlerConfig private[web] (
+    mimeTypes: Map[Extension, MimeType],
+    baseDirectory: Option[Directory],
+    basePackage: Option[Path],
+    classLoader: ClassLoader
+)
+
 // TODO Configure executor for WebServer (w/virtual threads)
 case class Config private (
     protocol: Protocol,
     address: InetSocketAddress,
     backlog: Int,
     stopDelay: Int,
-    mimeTypes: Map[Extension, MimeType],
-    baseDirectory: Option[Directory],
-    basePackage: Option[Path],
-    classLoader: ClassLoader
+    handlerConfig: HandlerConfig
 ):
   lazy val uri =
     s"${protocol.scheme}://${address.getHostString}:${address.getPort}"
@@ -57,12 +61,11 @@ object Config:
               throw Fault(s"Invalid address/port: '$address:$port'", e)
 
         require(stopDelay >= 0, "Stop delay cannot be negative")
-
         require(
           baseDirectory.isDefined || basePackage.isDefined,
           "Either base directory and/or base package must be defined"
         )
-
+    
         require(
           baseDirectory.isEmpty ||
             baseDirectory
@@ -70,12 +73,10 @@ object Config:
               .exists(dir => dir.isDirectory && dir.canRead),
           s"Unreadable base directory: '${baseDirectory.get}'"
         )
-
+    
         require(
           basePackage.isEmpty ||
-            basePackage.exists(pkg =>
-              getResource(s"$pkg/", classLoader).isDefined
-            ),
+            basePackage.exists(pkg => getResource(s"$pkg/", classLoader).isDefined),
           s"Unreadable base package: '${basePackage.get}'"
         )
 
@@ -84,10 +85,12 @@ object Config:
           inetSocketAddress,
           backlog,
           stopDelay,
-          mimeTypes,
-          baseDirectory.map(File(_)),
-          basePackage,
-          classLoader
+          HandlerConfig(
+            mimeTypes,
+            baseDirectory.map(File(_)),
+            basePackage,
+            classLoader
+          )
         )
   end apply
 end Config
