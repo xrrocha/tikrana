@@ -19,7 +19,7 @@ import scala.util.{Failure, Success, Try}
 trait WebResource:
   def contents(): Try[ByteArray]
   def stillExists(): Boolean
-  def hasChangedSince(time: Millis): Boolean
+  def lastModified(): Millis
 
 trait WebResourceLoader:
   def load(path: Path): Option[WebResource]
@@ -111,8 +111,8 @@ class FileResource(file: File) extends WebResource:
           .logAsWarning(logger)
   override def stillExists(): Boolean =
     file.exists() && file.canRead
-  override def hasChangedSince(time: Millis): Boolean =
-    file.lastModified() > time
+  override def lastModified(): Millis =
+    file.lastModified()
 end FileResource
 
 // TODO Check for resource (package) directories
@@ -145,8 +145,8 @@ class ClasspathLoader(
       ???
     override def stillExists(): Boolean =
       true
-    override def hasChangedSince(time: Millis): Boolean =
-      false
+    override def lastModified(): Millis =
+      System.currentTimeMillis()
   end DirectoryClasspathResource
 
   class FileClasspathResource(url: URL) extends WebResource:
@@ -157,8 +157,8 @@ class ClasspathLoader(
             .logAsWarning(logger)
     override def stillExists(): Boolean =
       true
-    override def hasChangedSince(time: Millis): Boolean =
-      false
+    override def lastModified(): Millis =
+      System.currentTimeMillis()
   end FileClasspathResource
 end ClasspathLoader
 

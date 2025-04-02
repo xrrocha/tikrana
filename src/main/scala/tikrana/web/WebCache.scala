@@ -14,16 +14,18 @@ class WebCache(
   case class Entry(resource: WebResource, payload: ByteArray)
   val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
 
-  def get(path: Path): Try[Option[ByteArray]] =
+  def get(requestedPath: Path): Try[Option[ByteArray]] =
+    // TODO Remove any leading slashes from path
+    val path = requestedPath.stripPrefix("/")
     cache.get(path) match
       case None => getPayloadFor(path)
       case Some((Entry(resource, payload), time)) =>
         if !resource.stillExists() then
           cache.remove(path)
-          val prefix = s"$path/"
+          val prefix = s"${path.stripSuffix("/")}/"
           cache --= cache.keys.filter(_.startsWith(prefix))
           Success(None)
-        else if resource.hasChangedSince(time) then
+        else if resource.lastModified() > time then
           getPayloadFor(path, resource).map(Some(_))
         else Success(Some(payload))
 
@@ -43,7 +45,7 @@ class WebCache(
       payload <- resource.contents()
       _ = cache(path) = (
         Entry(resource, payload),
-        System.currentTimeMillis
+        resource.lastModified()
       )
     yield payload
 
