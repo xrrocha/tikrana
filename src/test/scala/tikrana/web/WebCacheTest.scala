@@ -4,7 +4,6 @@ import Types.Path
 import tikrana.util.Types.{ByteArray, Millis}
 
 import scala.util.{Success, Try}
-import ujson.ByteArrayParser
 import tikrana.util.Utils
 
 class WebCacheTest extends munit.FunSuite:
