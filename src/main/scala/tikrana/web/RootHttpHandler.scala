@@ -14,7 +14,7 @@ import java.util.logging.Level.FINE
 import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 
 import scala.collection.mutable
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait ExchangeHandler:
   // no-op for now, will server dynamic content later on
@@ -44,23 +44,30 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
     DefaultMimeTypes ++ config.mimeTypes
 
   override def handle(exchange: HttpExchange): Unit =
-    getHandlerFor(exchange)
-      .handle(exchange)
-      .map: result =>
-        exchange.sendResponseHeaders(
-          result.httpCode.code,
-          // TODO Some handlers may not write a fixed number
-          result.contents.length
-        )
-        exchange.getResponseBody
-          .use: out =>
-            out.write(result.contents)
-            out.flush()
-          .mapFailure: t =>
-            Fault(s"I/O error handling ${exchange.getRequestURI}", t)
-              .logAsWarning(logger)
-      .peekFailure: exc =>
-        logger.logl(FINE, s"Error handling exchange", exc)
+    val handler = getHandlerFor(exchange)
+    val outcome =
+      for
+        result <- handler.handle(exchange)
+        _ <- Try:
+            exchange.sendResponseHeaders(
+              result.httpCode.code,
+              result.contents.length
+            )
+        _ <-
+          exchange.getResponseBody.use: out =>
+              out.write(result.contents)
+              out.flush()
+        _ <- Try(exchange.close())
+      yield ()
+    outcome.match
+        case Success(_) =>
+          logger.finer(s"Handled request: ${exchange.getRequestURI}")
+        case Failure(error) =>
+          logger.logl(
+            Level.FINE,
+            s"Error handling request: ${exchange.getRequestURI}",
+            error
+          )
   end handle
 
   def getHandlerFor(exchange: HttpExchange): ExchangeHandler =
