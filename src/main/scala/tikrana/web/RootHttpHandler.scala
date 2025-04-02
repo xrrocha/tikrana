@@ -40,11 +40,6 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   case class Entry(resource: WebResource, handler: ExchangeHandler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
-  private val loaders: Seq[WebResourceLoader] =
-    Seq(config.baseDirectory, config.basePackage)
-      .filter(_.isDefined)
-      .map(_.get)
-
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes
 
@@ -89,7 +84,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   private def buildHandlerFor(path: Path): ExchangeHandler =
     val loadedResource =
       LazyList
-        .from(loaders)
+        .from(config.loaders)
         .map(_.load(path))
         .find(_.isDefined)
         .flatten

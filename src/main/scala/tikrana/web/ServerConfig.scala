@@ -16,10 +16,9 @@ enum Protocol:
 end Protocol
 
 case class HandlerConfig private[web] (
+    classLoader: ClassLoader,
     mimeTypes: Map[Extension, MimeType],
-    baseDirectory: Option[FileLoader],
-    basePackage: Option[WebResourceLoader],
-    classLoader: ClassLoader
+    loaders: Seq[WebResourceLoader]
 )
 
 // TODO Configure executor for WebServer (w/virtual threads)
@@ -88,17 +87,20 @@ object ServerConfig:
           backlog,
           stopDelay,
           HandlerConfig(
+            classLoader,
             mimeTypes,
-            baseDirectory
-              .map(dir => FileLoader(File(dir))),
-            basePackage
-              .flatMap(pkg => getResource(s"$pkg/", classLoader))
-              .map: url =>
-                val uri = url.toURI
-                if uri.getScheme == "file" then FileLoader(File(uri))
-                else ClasspathLoader(basePackage.get, classLoader)
-            ,
-            classLoader
+            Seq(
+              baseDirectory
+                .map(dir => FileLoader(File(dir))),
+              basePackage
+                .flatMap(pkg => getResource(s"$pkg/", classLoader))
+                .map: url =>
+                  val uri = url.toURI
+                  if uri.getScheme == "file" then FileLoader(File(uri))
+                  else ClasspathLoader(basePackage.get, classLoader)
+            )
+              .filter(_.isDefined)
+              .map(_.get)
           )
         )
   end apply
