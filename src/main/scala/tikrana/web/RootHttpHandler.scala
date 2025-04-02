@@ -53,20 +53,16 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
               result.httpCode.code,
               result.contents.length
             )
-        _ <-
-          exchange.getResponseBody.use: out =>
-              out.write(result.contents)
-              out.flush()
-        _ <- Try(exchange.close())
+            exchange.getResponseBody.write(result.contents)
+            exchange.close()
       yield ()
     outcome.match
         case Success(_) =>
-          logger.finer(s"Handled request: ${exchange.getRequestURI}")
+          logger.logFine(s"Handled request: ${exchange.getRequestURI}")
         case Failure(error) =>
-          logger.logl(
-            Level.FINE,
+          logger.logFine(
+            error,
             s"Error handling request: ${exchange.getRequestURI}",
-            error
           )
   end handle
 
@@ -105,7 +101,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
               System.currentTimeMillis
             )
       case None =>
-        logger.finer(s"Resource not found: $path")
+        logger.logFiner(s"Resource not found: $path")
         ExchangeHandler.NotFound
   end buildHandlerFor
 
@@ -125,7 +121,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
         .map: contents =>
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>
-          logger.logl(FINE, s"Error reading resource '$path'", exc)
+          logger.logFine(exc, s"Error reading resource '$path'")
   end buildHandlerFor
 
   private def getFileType(path: Path): Option[FileType] =

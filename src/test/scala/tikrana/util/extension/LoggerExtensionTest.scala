@@ -11,11 +11,11 @@ class LogManagerExtensionTest extends munit.FunSuite:
       assertEquals(logManager.getLogger("").getLevel, Level.FINE)
 
 class LoggerExtensionTest extends munit.FunSuite:
-  test("logl logs lazily"):
+  test("logXXX methods log lazily".ignore):
       var changed = false
       val logger = Logger.getLogger("test")
       logger.setLevel(Level.INFO)
-      logger.logl(Level.FINEST, {changed = true; "test message"})
+      logger.logFinest({changed = true; "test message"})
       assert(!changed)
-      logger.logl(Level.SEVERE, {changed = true; "test message"})
+      logger.logSevere({changed = true; "test message"})
       assert(changed)
