@@ -3,7 +3,7 @@ package tikrana.web
 import Types.*
 import tikrana.util.Utils.*
 
-import scala.collection.mutable
+import scala.collection.concurrent
 import scala.util.{Failure, Success, Try}
 
 // TODO Evict cache entries after some time-to-live
@@ -12,46 +12,39 @@ class WebCache(
 ):
 
   case class Entry(resource: WebResource, payload: ByteArray)
-  val cache = mutable.Map[Path, (Entry, Millis)]()
+  val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
 
-  def getPayloadFor(path: Path): Try[Option[ByteArray]] =
+  def get(path: Path): Try[Option[ByteArray]] =
     cache.get(path) match
+      case None => getPayloadFor(path)
       case Some((Entry(resource, payload), time)) =>
         if !resource.stillExists() then
-          // TODO Remove all cache entries descending from path
           cache.remove(path)
+          val prefix = s"$path/"
+          cache --= cache.keys.filter(_.startsWith(prefix))
           Success(None)
         else if resource.hasChangedSince(time) then
-          buildPayloadFor(path, resource)
-            .map(Some(_))
+          getPayloadFor(path, resource).map(Some(_))
         else Success(Some(payload))
-      case None =>
-        doGetPayloadFor(path)
-  end getPayloadFor
 
-  private def doGetPayloadFor(path: Path): Try[Option[ByteArray]] =
-    val loadedResource = loadResource(path)
-    loadedResource match
+  private def getPayloadFor(path: Path): Try[Option[ByteArray]] =
+    loadResource(path) match
       case Some(resource) =>
-        buildPayloadFor(path, resource)
-          .map(payload => Some(payload))
+        for payload <- getPayloadFor(path, resource)
+        yield Some(payload)
       case None =>
         Success(None)
-  end doGetPayloadFor
 
-  private def buildPayloadFor(
+  private def getPayloadFor(
       path: Path,
       resource: WebResource
   ): Try[ByteArray] =
-    resource
-      .contents()
-      .peek: payload =>
-        cache(path) = (
-          Entry(resource, payload),
-          System.currentTimeMillis
-        )
-      .peekFailure: exc =>
-        logger.logFine(exc, s"Error reading resource '$path'")
-  end buildPayloadFor
+    for
+      payload <- resource.contents()
+      _ = cache(path) = (
+        Entry(resource, payload),
+        System.currentTimeMillis
+      )
+    yield payload
 
 end WebCache

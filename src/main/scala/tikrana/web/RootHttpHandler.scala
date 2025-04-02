@@ -48,7 +48,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
 
     val outcome =
       for
-        cachedEntry <- cache.getPayloadFor(path)
+        cachedEntry <- cache.get(path)
 
         result = cachedEntry match
           case Some(payload) =>
