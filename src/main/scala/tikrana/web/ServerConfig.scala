@@ -17,8 +17,8 @@ end Protocol
 
 case class HandlerConfig private[web] (
     mimeTypes: Map[Extension, MimeType],
-    baseDirectory: Option[Directory],
-    basePackage: Option[Path],
+    baseDirectory: Option[FileLoader],
+    basePackage: Option[WebResourceLoader],
     classLoader: ClassLoader
 )
 
@@ -87,8 +87,15 @@ object ServerConfig:
           stopDelay,
           HandlerConfig(
             mimeTypes,
-            baseDirectory.map(File(_)),
-            basePackage,
+            baseDirectory
+              .map(File(_))
+              .map(FileLoader(_)),
+            basePackage
+              .flatMap(pkg => getResource(s"$pkg/", classLoader))
+              .map: url =>
+                val uri = url.toURI
+                if uri.getScheme == "file" then FileLoader(File(uri))
+                else ClasspathLoader(basePackage.get, classLoader),
             classLoader
           )
         )

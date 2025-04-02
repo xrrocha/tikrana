@@ -41,14 +41,8 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
   private val loaders: Seq[WebResourceLoader] = Seq(
-    config.baseDirectory.map(FileLoader(_)),
-    // TODO This probably belongs in config preprocessing
-    config.basePackage.flatMap: packageName =>
-        getResource(s"$packageName/")
-          .map: url =>
-            val uri = url.toURI
-            if uri.getScheme == "file" then FileLoader(File(uri))
-            else ClasspathLoader(packageName, config.classLoader)
+    config.baseDirectory,
+    config.basePackage
   )
     .filter(_.isDefined)
     .map(_.get)
