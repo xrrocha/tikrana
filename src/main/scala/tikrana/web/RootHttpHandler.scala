@@ -57,7 +57,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
     DefaultMimeTypes ++ config.mimeTypes
 
   override def handle(exchange: HttpExchange): Unit =
-    getHandler(exchange)
+    getHandlerFor(exchange)
       .handle(exchange)
       .map: result =>
         exchange.sendResponseHeaders(
@@ -76,7 +76,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
         logger.logl(FINE, s"Error handling exchange", exc)
   end handle
 
-  def getHandler(exchange: HttpExchange): ExchangeHandler =
+  def getHandlerFor(exchange: HttpExchange): ExchangeHandler =
     val path = getPath(exchange)
     cache.get(path) match
       case Some((Entry(resource, sameHandler), time)) =>
@@ -89,7 +89,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
         else sameHandler
       case None =>
         buildHandlerFor(path)
-  end getHandler
+  end getHandlerFor
 
   def getPath(exchange: HttpExchange): Path =
     exchange.getRequestURI.getPath.substring(1)
@@ -104,31 +104,33 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
     loadedResource match
       case Some(resource) =>
         buildHandlerFor(path, resource)
+          .also: handler =>
+            // TODO Evict cache entries after some time-to-live
+            cache(path) = (
+              Entry(resource, handler),
+              System.currentTimeMillis
+            )
       case None =>
         logger.finer(s"Resource not found: $path")
         ExchangeHandler.NotFound
   end buildHandlerFor
 
-  private def buildHandlerFor(path: Path, resource: WebResource): ExchangeHandler =
+  private def buildHandlerFor(
+      path: Path,
+      resource: WebResource
+  ): ExchangeHandler =
     val mimeType =
       getFileType(path) match
         case Some(fileType) =>
           mimeTypes.getOrElse(fileType, DefaultMimeType)
         case None =>
           DefaultMimeType
-    val handler: ExchangeHandler = _ =>
-      resource
-        .contents()
+    _ =>
+      resource.contents()
         .map: contents =>
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>
           logger.logl(FINE, s"Error reading resource '$path'", exc)
-    // TODO Evict cache entries after some time-to-live
-    cache(path) = (
-      Entry(resource, handler),
-      System.currentTimeMillis
-    )
-    handler
   end buildHandlerFor
 
   private def getFileType(path: Path): Option[FileType] =
