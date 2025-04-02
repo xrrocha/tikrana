@@ -16,12 +16,6 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-trait ExchangeHandler:
-  // no-op for now, will server dynamic content later on
-  def handle(exchange: HttpExchange): Try[Result]
-object ExchangeHandler:
-  val NotFound: ExchangeHandler = _ => Success(Result.NotFound)
-
 trait WebResource:
   def contents(): Try[ByteArray]
   def stillExists(): Boolean
@@ -37,17 +31,25 @@ object RootHttpHandler:
 end RootHttpHandler
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  case class Entry(resource: WebResource, handler: ExchangeHandler)
-  private val cache = mutable.Map[Path, (Entry, Millis)]()
+  private val cache = WebCache(config: HandlerConfig)
 
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes
 
   override def handle(exchange: HttpExchange): Unit =
-    val handler = getHandlerFor(exchange)
+    val path = getPath(exchange)
+
     val outcome =
       for
-        result <- handler.handle(exchange)
+        cachedEntry <- cache.getPayloadFor(path)
+
+        result = cachedEntry match
+          case Some(payload) =>
+            Result(HttpCode.OK, payload, getMimeTypeFor(path))
+          case None =>
+            logger.logFiner(s"Request path not found: $path")
+            Result.NotFound
+
         _ <- Try:
             exchange.sendResponseHeaders(
               result.httpCode.code,
@@ -56,76 +58,23 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
             exchange.getResponseBody.write(result.contents)
             exchange.close()
       yield ()
+
+    val uri = exchange.getRequestURI
     outcome.match
         case Success(_) =>
-          logger.logFine(s"Handled request: ${exchange.getRequestURI}")
-        case Failure(error) =>
-          logger.logFine(
-            error,
-            s"Error handling request: ${exchange.getRequestURI}",
-          )
+          logger.logFiner(s"Handled request: $uri")
+        case Failure(err) =>
+          logger.logFine(err, s"Error handling request: $uri")
   end handle
 
-  def getHandlerFor(exchange: HttpExchange): ExchangeHandler =
-    val path = getPath(exchange)
-    cache.get(path) match
-      case Some((Entry(resource, sameHandler), time)) =>
-        if !resource.stillExists() then
-          // TODO Remove all cache entries descending from path
-          cache.remove(path)
-          ExchangeHandler.NotFound
-        else if resource.hasChangedSince(time) then
-          buildHandlerFor(path, resource)
-        else sameHandler
-      case None =>
-        buildHandlerFor(path)
-  end getHandlerFor
+  private[web] def getPath(exchange: HttpExchange): Path =
+    exchange.getRequestURI.getPath.substring(1).toLowerCase
 
-  def getPath(exchange: HttpExchange): Path =
-    exchange.getRequestURI.getPath.substring(1)
+  private[web] def getMimeTypeFor(path: Path): MimeType =
+    getFileType(path).flatMap(mimeTypes.get).getOrElse(DefaultMimeType)
 
-  private def buildHandlerFor(path: Path): ExchangeHandler =
-    val loadedResource =
-      LazyList
-        .from(config.loaders)
-        .map(_.load(path))
-        .find(_.isDefined)
-        .flatten
-    loadedResource match
-      case Some(resource) =>
-        buildHandlerFor(path, resource)
-          .also: handler =>
-            // TODO Evict cache entries after some time-to-live
-            cache(path) = (
-              Entry(resource, handler),
-              System.currentTimeMillis
-            )
-      case None =>
-        logger.logFiner(s"Resource not found: $path")
-        ExchangeHandler.NotFound
-  end buildHandlerFor
-
-  private def buildHandlerFor(
-      path: Path,
-      resource: WebResource
-  ): ExchangeHandler =
-    val mimeType =
-      getFileType(path) match
-        case Some(fileType) =>
-          mimeTypes.getOrElse(fileType, DefaultMimeType)
-        case None =>
-          DefaultMimeType
-    _ =>
-      resource
-        .contents()
-        .map: contents =>
-          Result(HttpCode.OK, contents, mimeType)
-        .peekFailure: exc =>
-          logger.logFine(exc, s"Error reading resource '$path'")
-  end buildHandlerFor
-
-  private def getFileType(path: Path): Option[FileType] =
-    path.extension
+  private[web] def getFileType(path: Path): Option[FileType] =
+    path.extension.map(_.toLowerCase)
 end RootHttpHandler
 
 // TODO Pass default indexFile name as a parameter
