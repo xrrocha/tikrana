@@ -1,9 +1,7 @@
 package tikrana.web
 
 import Types.*
-
 import tikrana.util.Utils.*
-import tikrana.web.WebResourceLoader.DefaultMimeType
 
 enum HttpCode(val code: Int, val message: String):
   case OK extends HttpCode(200, "OK")
@@ -15,7 +13,7 @@ end HttpCode
 case class Result(
     httpCode: HttpCode,
     contents: ByteArray,
-    mimeType: MimeType = DefaultMimeType,
+    mimeType: MimeType = MimeTypes.DefaultMimeType,
     headers: Map[HeaderName, Seq[HeaderValue]] = Map.empty
 )
 object Result:

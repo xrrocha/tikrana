@@ -5,7 +5,6 @@ import Types.*
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-import tikrana.web.WebResourceLoader.DefaultMimeType
 
 import java.io.{File, FileInputStream}
 import java.net.URL
@@ -21,16 +20,11 @@ trait WebResource:
   def stillExists(): Boolean
   def lastModified(): Millis
 
-  def hasVanished(): Boolean =
-    !stillExists()
-
-  def hasChangedSince(time: Millis): Boolean =
-    lastModified() > time
+  def hasVanished(): Boolean = !stillExists()
+  def hasChangedSince(time: Millis): Boolean = lastModified() > time
 
 trait WebResourceLoader:
   def load(path: Path): Option[WebResource]
-object WebResourceLoader:
-  val DefaultMimeType = "application/octet-stream"
 
 object RootHttpHandler:
   def indexFile: Path = "index.html"
@@ -47,7 +41,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   )
 
   private val mimeTypes: Map[FileType, MimeType] =
-    DefaultMimeTypes ++ config.mimeTypes
+    MimeTypes.DefaultMimeTypes ++ config.mimeTypes
 
   override def handle(exchange: HttpExchange): Unit =
     val path = getPath(exchange)
@@ -84,7 +78,9 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
     exchange.getRequestURI.getPath.substring(1).toLowerCase
 
   private[web] def getMimeTypeFor(path: Path): MimeType =
-    getFileType(path).flatMap(mimeTypes.get).getOrElse(DefaultMimeType)
+    getFileType(path)
+     .flatMap(mimeTypes.get)
+     .getOrElse(MimeTypes.DefaultMimeType)
 
   private[web] def getFileType(path: Path): Option[FileType] =
     path.extension.map(_.toLowerCase)
