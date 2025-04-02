@@ -31,7 +31,14 @@ object RootHttpHandler:
 end RootHttpHandler
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  private val cache = WebCache(config: HandlerConfig)
+  private val cache = WebCache(
+    loadResource = path =>
+      LazyList
+        .from(config.loaders)
+        .map(_.load(path))
+        .find(_.isDefined)
+        .flatten
+  )
 
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes

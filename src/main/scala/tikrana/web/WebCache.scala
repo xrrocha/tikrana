@@ -1,19 +1,15 @@
 package tikrana.web
 
 import Types.*
-
-import tikrana.util.Fault
-import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-import tikrana.web.WebResourceLoader.DefaultMimeType
-
-import com.sun.net.httpserver.HttpExchange
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 // TODO Evict cache entries after some time-to-live
-class WebCache(val config: HandlerConfig):
+class WebCache(
+    val loadResource: Path => Option[WebResource]
+):
 
   case class Entry(resource: WebResource, payload: ByteArray)
   val cache = mutable.Map[Path, (Entry, Millis)]()
@@ -34,12 +30,7 @@ class WebCache(val config: HandlerConfig):
   end getPayloadFor
 
   private def doGetPayloadFor(path: Path): Try[Option[ByteArray]] =
-    val loadedResource =
-      LazyList
-        .from(config.loaders)
-        .map(_.load(path))
-        .find(_.isDefined)
-        .flatten
+    val loadedResource = loadResource(path)
     loadedResource match
       case Some(resource) =>
         buildPayloadFor(path, resource)
