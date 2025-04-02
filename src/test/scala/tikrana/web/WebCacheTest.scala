@@ -3,8 +3,8 @@ package tikrana.web
 import Types.Path
 import tikrana.util.Types.{ByteArray, Millis}
 
+import collection.mutable
 import scala.util.{Success, Try}
-import tikrana.util.Utils
 
 class WebCacheTest extends munit.FunSuite:
   test("Retrieves existing resource computing payload only once"):
@@ -73,9 +73,9 @@ class WebCacheTest extends munit.FunSuite:
       assertEquals(computed, 2)
 
 
-  test("Removes resource entry on resource vanishing"):
+  test("Removes cache entry on resource vanishing"):
       var computed = 0
-      val repo = collection.mutable.Map[Path, (String, Millis)](
+      val repo = mutable.Map[Path, (String, Millis)](
         "path" -> ("path #1", System.currentTimeMillis),
         "path/subpath1" -> ("subpath #1.1", System.currentTimeMillis),
         "path/subpath2" -> ("subpath #1.2", System.currentTimeMillis)
