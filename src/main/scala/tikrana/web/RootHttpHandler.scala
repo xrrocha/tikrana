@@ -40,12 +40,10 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   case class Entry(resource: WebResource, handler: ExchangeHandler)
   private val cache = mutable.Map[Path, (Entry, Millis)]()
 
-  private val loaders: Seq[WebResourceLoader] = Seq(
-    config.baseDirectory,
-    config.basePackage
-  )
-    .filter(_.isDefined)
-    .map(_.get)
+  private val loaders: Seq[WebResourceLoader] =
+    Seq(config.baseDirectory, config.basePackage)
+      .filter(_.isDefined)
+      .map(_.get)
 
   private val mimeTypes: Map[FileType, MimeType] =
     DefaultMimeTypes ++ config.mimeTypes
@@ -120,7 +118,8 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
         case None =>
           DefaultMimeType
     _ =>
-      resource.contents()
+      resource
+        .contents()
         .map: contents =>
           Result(HttpCode.OK, contents, mimeType)
         .peekFailure: exc =>

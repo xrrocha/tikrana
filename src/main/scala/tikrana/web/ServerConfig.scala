@@ -65,7 +65,7 @@ object ServerConfig:
           baseDirectory.isDefined || basePackage.isDefined,
           "Either base directory and/or base package must be defined"
         )
-    
+
         require(
           baseDirectory.isEmpty ||
             baseDirectory
@@ -73,10 +73,12 @@ object ServerConfig:
               .exists(dir => dir.isDirectory && dir.canRead),
           s"Unreadable base directory: '${baseDirectory.get}'"
         )
-    
+
         require(
           basePackage.isEmpty ||
-            basePackage.exists(pkg => getResource(s"$pkg/", classLoader).isDefined),
+            basePackage.exists(pkg =>
+              getResource(s"$pkg/", classLoader).isDefined
+            ),
           s"Unreadable base package: '${basePackage.get}'"
         )
 
@@ -88,14 +90,14 @@ object ServerConfig:
           HandlerConfig(
             mimeTypes,
             baseDirectory
-              .map(File(_))
-              .map(FileLoader(_)),
+              .map(dir => FileLoader(File(dir))),
             basePackage
               .flatMap(pkg => getResource(s"$pkg/", classLoader))
               .map: url =>
                 val uri = url.toURI
                 if uri.getScheme == "file" then FileLoader(File(uri))
-                else ClasspathLoader(basePackage.get, classLoader),
+                else ClasspathLoader(basePackage.get, classLoader)
+            ,
             classLoader
           )
         )
