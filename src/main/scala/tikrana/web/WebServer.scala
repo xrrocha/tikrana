@@ -19,13 +19,11 @@ protected val logger: Logger =
 
 // TODO Support HTTPS
 class WebServer(config: ServerConfig):
-  import config.*
-
   private var webServer: Option[HttpServer] = None
-  private lazy val rootHandler = RootHttpHandler(handlerConfig)
+  private lazy val rootHandler = RootHttpHandler(config.handlerConfig)
 
   def start(): Try[WebServer] =
-    logger.fine(s"Starting web server on $uri")
+    logger.fine(s"Starting web server on ${config.uri}")
     for
       server <- createServer()
       _ <- Try(server.start())
@@ -35,10 +33,10 @@ class WebServer(config: ServerConfig):
   end start
 
   def stop(): Try[WebServer] =
-    logger.fine(s"Stopping web server at $uri")
+    logger.fine(s"Stopping web server at ${config.uri}")
     for
       server <- webServer.toTry(Fault("Web server not started"))
-      _ <- Try(server.stop(stopDelay))
+      _ <- Try(server.stop(config.stopDelay))
     yield
       webServer = None
       this
@@ -47,8 +45,8 @@ class WebServer(config: ServerConfig):
   private def createServer(): Try[HttpServer] =
     for server <- Try(
         HttpServer.create(
-          address,
-          backlog,
+          config.address,
+          config.backlog,
           "/",
           rootHandler
         )
