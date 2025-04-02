@@ -19,14 +19,16 @@ class WebCache(
     cache.get(path) match
       case None => getPayloadFor(path)
       case Some((Entry(resource, payload), time)) =>
-        if !resource.stillExists() then
-          cache.remove(path)
-          val prefix = s"${path.stripSuffix("/")}/"
-          cache --= cache.keys.filter(_.startsWith(prefix))
-          Success(None)
-        else if resource.lastModified() > time then
+        if resource.hasVanished() then removeEntryFor(path)
+        else if resource.hasChangedSince(time) then
           getPayloadFor(path, resource).map(Some(_))
         else Success(Some(payload))
+
+  private def removeEntryFor(path: Path): Try[Option[ByteArray]] =
+    cache -= path
+    val prefix = s"${path.stripSuffix("/")}/"
+    cache --= cache.keys.filter(_.startsWith(prefix))
+    Success(None)
 
   private def getPayloadFor(path: Path): Try[Option[ByteArray]] =
     loadResource(path) match

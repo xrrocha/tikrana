@@ -21,6 +21,12 @@ trait WebResource:
   def stillExists(): Boolean
   def lastModified(): Millis
 
+  def hasVanished(): Boolean =
+    !stillExists()
+
+  def hasChangedSince(time: Millis): Boolean =
+    lastModified() > time
+
 trait WebResourceLoader:
   def load(path: Path): Option[WebResource]
 object WebResourceLoader:
