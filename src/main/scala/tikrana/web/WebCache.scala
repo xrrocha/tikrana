@@ -15,7 +15,6 @@ class WebCache(
   val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
 
   def get(requestedPath: Path): Try[Option[ByteArray]] =
-    // TODO Remove any leading slashes from path
     val path = requestedPath.stripPrefix("/")
     cache.get(path) match
       case None => getPayloadFor(path)
