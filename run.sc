@@ -9,7 +9,7 @@
 
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
-import tikrana.web.{Config, WebServer}
+import tikrana.web.{ServerConfig, WebServer}
 
 import java.util.logging.*
 
@@ -20,7 +20,7 @@ if args.length < 2 then
 val outcome =
   for
     _ <- LogManager.getLogManager.readConfiguration("logging.properties")
-    config <- Config(
+    config <- ServerConfig(
       address = args(0),
       port = args(1).toInt,
       baseDirectory = Some(System.getProperty("user.dir"))
