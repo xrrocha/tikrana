@@ -14,7 +14,7 @@ class Cache(val loaders: Seq[ResourceLoader]):
   val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
 
   def get(requestedPath: Path): Try[Option[ByteArray]] =
-    val path = requestedPath.stripPrefix("/")
+    val path = ResourceLoader.removeSlashes(requestedPath)
     cache.get(path) match
       case None => getPayloadFor(path)
       case Some((Entry(resource, payload), time)) =>
