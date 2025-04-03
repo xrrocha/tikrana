@@ -6,7 +6,6 @@ import tikrana.util.extension.TryExtensions.*
 
 import java.io.{FileNotFoundException, InputStream}
 import java.net.URL
-
 import scala.util.{Try, Using}
 
 object Resources:

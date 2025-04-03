@@ -1,11 +1,11 @@
 package tikrana.web
 
-import Types.*
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
+import scala.annotation.tailrec
 import scala.collection.concurrent
 import scala.util.{Failure, Success, Try}
-import scala.annotation.tailrec
 
 // TODO Evict cache entries after some time-to-live
 class Cache(val loaders: Seq[ResourceLoader]):

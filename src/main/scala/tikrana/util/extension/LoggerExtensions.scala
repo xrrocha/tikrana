@@ -3,10 +3,7 @@ package tikrana.util.extension
 import tikrana.util.Resources.openResource
 import tikrana.util.extension.CloseableExtensions.use
 
-import java.util.logging.Level
-import java.util.logging.Logger
-import java.util.logging.LogManager
-
+import java.util.logging.{Level, LogManager, Logger}
 import scala.util.Try
 
 object LoggerExtensions:
@@ -39,7 +36,7 @@ object LoggerExtensions:
 object LogManagerExtensions:
   extension (logManager: LogManager)
     def readConfiguration(resourceName: String): Try[Unit] =
-      for 
+      for
         is <- openResource(resourceName)
         _ <- is.use(logManager.readConfiguration)
       yield ()

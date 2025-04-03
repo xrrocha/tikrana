@@ -1,10 +1,9 @@
 package tikrana.web
 
-import Types.*
-
 import tikrana.util.Fault
 import tikrana.util.Resources.getResource
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 import java.io.File
 import java.net.InetSocketAddress
@@ -113,7 +112,8 @@ object ServerConfig:
                 .flatMap(pkg => getResource(s"$pkg/", classLoader))
                 .map: url =>
                   val uri = url.toURI
-                  if uri.getScheme == "file" then FileLoader(File(uri), indexFiles)
+                  if uri.getScheme == "file" then
+                    FileLoader(File(uri), indexFiles)
                   else
                     ClasspathLoader(
                       basePackage.get,

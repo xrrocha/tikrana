@@ -2,11 +2,13 @@
 
 //--sun-misc-unsafe-memory-access=allow
 
+// -XX:+UseCompactObjectHeaders
+
 //> using file project.scala
 //> using files src/main/scala
 
-import tikrana.util.Utils.*
 import tikrana.util.Resources.*
+import tikrana.util.Utils.*
 import tikrana.web.{Config, WebServer}
 
 import java.util.logging.*
@@ -32,5 +34,5 @@ val outcome =
         webServer.stop()
 
 outcome.peekFailure: t =>
-  println(s"Error: ${t.errorMessage}")
-  sys.exit(1)
+    println(s"Error: ${t.errorMessage}")
+    sys.exit(1)

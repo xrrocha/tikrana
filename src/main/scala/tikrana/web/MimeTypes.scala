@@ -1,8 +1,7 @@
 package tikrana.web
 
-import Types.*
-
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 object MimeTypes:
   val DefaultMimeType = "application/octet-stream"

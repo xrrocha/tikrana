@@ -1,24 +1,22 @@
 package tikrana.web
 
-import Types.*
-
+import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import tikrana.util.Fault
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 import java.io.{File, FileInputStream}
 import java.net.URL
 import java.util.logging.Level
 import java.util.logging.Level.FINE
-import com.sun.net.httpserver.{HttpExchange, HttpHandler}
-
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
-import scala.annotation.tailrec
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   private val cache = Cache(config.loaders)
-              
+
   private val mimeTypes: Map[FileType, MimeType] =
     MimeTypes.DefaultMimeTypes ++ config.mimeTypes
 

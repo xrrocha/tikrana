@@ -1,6 +1,6 @@
 package tikrana.util.extension
 
-import OptionExtensions.*
+import tikrana.util.extension.OptionExtensions.*
 
 import scala.util.{Failure, Success, Try}
 

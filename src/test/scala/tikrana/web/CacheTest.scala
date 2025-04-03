@@ -1,9 +1,9 @@
 package tikrana.web
 
-import Types.Path
 import tikrana.util.Types.{ByteArray, Millis}
+import tikrana.web.Types.Path
 
-import collection.mutable
+import scala.collection.mutable
 import scala.util.{Success, Try}
 
 class CacheTest extends munit.FunSuite:
@@ -15,15 +15,15 @@ class CacheTest extends munit.FunSuite:
       val loader = new ResourceLoader:
         override def loadResource(path: Path): Try[Option[Resource]] =
           Try:
-            Some:
-              new Resource:
-                override def contents() =
-                  computed += 1
-                  Success(payload.getBytes)
-                override def stillExists() =
-                  true
-                override def lastModified(): Millis =
-                  payloadTime
+              Some:
+                  new Resource:
+                    override def contents() =
+                      computed += 1
+                      Success(payload.getBytes)
+                    override def stillExists() =
+                      true
+                    override def lastModified(): Millis =
+                      payloadTime
       val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", payload)
@@ -57,14 +57,14 @@ class CacheTest extends munit.FunSuite:
         override def loadResource(path: Path): Try[Option[Resource]] =
           var previousPayload = payload
           Try:
-            Some:
-              new Resource:
-                override def contents() =
-                  computed += 1
-                  Success(payload.getBytes)
-                override def stillExists() = true
-                override def lastModified(): Millis =
-                  payloadTime
+              Some:
+                  new Resource:
+                    override def contents() =
+                      computed += 1
+                      Success(payload.getBytes)
+                    override def stillExists() = true
+                    override def lastModified(): Millis =
+                      payloadTime
       val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", "Pass #1")
@@ -87,18 +87,18 @@ class CacheTest extends munit.FunSuite:
       val loader = new ResourceLoader:
         override def loadResource(path: Path): Try[Option[Resource]] =
           Try:
-            for _ <- repo.get(path)
-            yield new Resource:
-              override def contents(): Try[ByteArray] =
-                computed += 1
-                Success(repo(path)._1.getBytes)
-              override def stillExists() =
-                repo.contains(path)
-              override def lastModified(): Millis =
-                repo
-                  .get(path)
-                  .map(_._2)
-                  .getOrElse(System.currentTimeMillis)
+              for _ <- repo.get(path)
+              yield new Resource:
+                override def contents(): Try[ByteArray] =
+                  computed += 1
+                  Success(repo(path)._1.getBytes)
+                override def stillExists() =
+                  repo.contains(path)
+                override def lastModified(): Millis =
+                  repo
+                    .get(path)
+                    .map(_._2)
+                    .getOrElse(System.currentTimeMillis)
       val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", "path #1")

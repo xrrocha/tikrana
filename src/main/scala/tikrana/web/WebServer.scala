@@ -1,18 +1,14 @@
 package tikrana.web
 
+import com.sun.net.httpserver.{Filter, HttpServer}
 import tikrana.util.Fault
 import tikrana.util.Utils.*
-
-import com.sun.net.httpserver.Filter
-import com.sun.net.httpserver.HttpServer
+import tikrana.web.Types.*
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor
-import java.util.logging.Level
-import java.util.logging.Logger
+import java.util.logging.{Level, Logger}
 import scala.util.{Failure, Success, Try}
-
-import Types.*
 
 protected val logger: Logger =
   Logger.getLogger("tikrana.web.WebServer")

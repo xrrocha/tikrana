@@ -1,8 +1,7 @@
 package tikrana.web
 
-import Types.*
-
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 import scala.util.Try
 
@@ -10,7 +9,7 @@ object ResourceLoader:
   private val slashRemovers = Seq("^/+".r, "/+$".r)
   def removeSlashes(path: Path): Path =
     slashRemovers.foldLeft(path.trim): (path, remover) =>
-      remover.replaceFirstIn(path, "")
+        remover.replaceFirstIn(path, "")
 
 trait ResourceLoader:
   def loadResource(path: Path): Try[Option[Resource]]

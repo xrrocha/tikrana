@@ -1,16 +1,14 @@
 package tikrana.web
 
-import Types.*
-
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
+import java.io.FileNotFoundException
 import java.net.{JarURLConnection, URL}
 import java.util.jar.JarFile
-
 import scala.jdk.StreamConverters.*
 import scala.util.Try
-import java.io.FileNotFoundException
 
 type EntryName = String
 

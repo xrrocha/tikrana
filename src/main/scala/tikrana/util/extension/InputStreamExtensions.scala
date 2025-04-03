@@ -3,7 +3,6 @@ package tikrana.util.extension
 import tikrana.util.Types.ByteArray
 
 import java.io.InputStream
-
 import scala.util.{Try, Using}
 
 object InputStreamExtensions:

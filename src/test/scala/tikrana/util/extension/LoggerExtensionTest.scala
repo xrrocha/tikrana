@@ -1,7 +1,8 @@
 package tikrana.util.extension
 
-import LoggerExtensions.*
-import LogManagerExtensions.*
+import tikrana.util.extension.LogManagerExtensions.*
+import tikrana.util.extension.LoggerExtensions.*
+
 import java.util.logging.{Level, LogManager, Logger}
 
 class LogManagerExtensionTest extends munit.FunSuite:
@@ -15,7 +16,7 @@ class LoggerExtensionTest extends munit.FunSuite:
       var changed = false
       val logger = Logger.getLogger("test")
       logger.setLevel(Level.INFO)
-      logger.logFinest({changed = true; "test message"})
+      logger.logFinest({ changed = true; "test message" })
       assert(!changed)
-      logger.logSevere({changed = true; "test message"})
+      logger.logSevere({ changed = true; "test message" })
       assert(changed)

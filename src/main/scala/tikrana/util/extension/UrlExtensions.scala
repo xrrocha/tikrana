@@ -4,7 +4,6 @@ import tikrana.util.Types.ByteArray
 
 import java.io.InputStream
 import java.net.URL
-
 import scala.util.{Try, Using}
 
 object UrlExtensions:

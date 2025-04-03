@@ -1,7 +1,7 @@
 package tikrana.web
 
-import Types.*
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 enum HttpCode(val code: Int, val message: String):
   case OK extends HttpCode(200, "OK")

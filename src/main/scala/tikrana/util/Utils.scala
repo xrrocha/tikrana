@@ -1,6 +1,6 @@
 package tikrana.util
 
-import extension.*
+import tikrana.util.extension.*
 
 object Utils:
   export Types.*

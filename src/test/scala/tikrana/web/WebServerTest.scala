@@ -1,8 +1,8 @@
 package tikrana.web
 
-import Types.*
 import tikrana.util.Resources.*
 import tikrana.util.Utils.*
+import tikrana.web.Types.*
 
 import java.net.URI
 import scala.util.{Failure, Success}

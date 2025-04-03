@@ -1,6 +1,6 @@
 package tikrana.util.extension
 
-import StringExtensions.*
+import tikrana.util.extension.StringExtensions.*
 
 class StringExtensionTest extends munit.FunSuite:
   test("Determines extension"):
