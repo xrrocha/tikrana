@@ -18,7 +18,7 @@ end Protocol
 case class HandlerConfig private[web] (
     classLoader: ClassLoader,
     mimeTypes: Map[Extension, MimeType],
-    loaders: Seq[WebResourceLoader]
+    loaders: Seq[ResourceLoader]
 )
 
 // TODO Configure executor for WebServer (w/virtual threads)

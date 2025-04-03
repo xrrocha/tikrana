@@ -7,11 +7,11 @@ import scala.collection.concurrent
 import scala.util.{Failure, Success, Try}
 
 // TODO Evict cache entries after some time-to-live
-class WebCache(
-    val loadResource: Path => Option[WebResource]
+class Cache(
+    val loadResource: Path => Option[Resource]
 ):
 
-  case class Entry(resource: WebResource, payload: ByteArray)
+  case class Entry(resource: Resource, payload: ByteArray)
   val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
 
   def get(requestedPath: Path): Try[Option[ByteArray]] =
@@ -40,7 +40,7 @@ class WebCache(
 
   private def getPayloadFor(
       path: Path,
-      resource: WebResource
+      resource: Resource
   ): Try[ByteArray] =
     for
       payload <- resource.contents()
@@ -50,4 +50,4 @@ class WebCache(
       )
     yield payload
 
-end WebCache
+end Cache

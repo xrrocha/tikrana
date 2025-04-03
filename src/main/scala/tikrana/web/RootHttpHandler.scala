@@ -15,7 +15,7 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-trait WebResource:
+trait Resource:
   def contents(): Try[ByteArray]
   def stillExists(): Boolean
   def lastModified(): Millis
@@ -23,15 +23,15 @@ trait WebResource:
   def hasVanished(): Boolean = !stillExists()
   def hasChangedSince(time: Millis): Boolean = lastModified() > time
 
-trait WebResourceLoader:
-  def load(path: Path): Option[WebResource]
+trait ResourceLoader:
+  def load(path: Path): Option[Resource]
 
 object RootHttpHandler:
   def indexFile: Path = "index.html"
 end RootHttpHandler
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  private val cache = WebCache(
+  private val cache = Cache(
     loadResource = path =>
       LazyList
         .from(config.loaders)
@@ -87,8 +87,8 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
 end RootHttpHandler
 
 // TODO Pass default indexFile name as a parameter
-class FileLoader(val baseDirectory: Directory) extends WebResourceLoader:
-  override def load(path: Path): Option[WebResource] =
+class FileLoader(val baseDirectory: Directory) extends ResourceLoader:
+  override def load(path: Path): Option[Resource] =
     val file =
       if path.isEmpty then baseDirectory
       else File(baseDirectory, path)
@@ -101,7 +101,7 @@ class FileLoader(val baseDirectory: Directory) extends WebResourceLoader:
       else Some(FileResource(file))
 end FileLoader
 
-class FileResource(file: File) extends WebResource:
+class FileResource(file: File) extends Resource:
   override def contents(): Try[ByteArray] =
     Try:
         if file.isFile then FileInputStream(file).readAllBytes()
@@ -119,8 +119,8 @@ end FileResource
 class ClasspathLoader(
     val packageName: Path,
     val classLoader: ClassLoader
-) extends WebResourceLoader:
-  override def load(path: Path): Option[WebResource] =
+) extends ResourceLoader:
+  override def load(path: Path): Option[Resource] =
     def get(suffix: String): Option[URL] =
       getResource(s"$packageName/$path$suffix", classLoader)
 
@@ -139,7 +139,7 @@ class ClasspathLoader(
           case ("dir", url)  => DirectoryClasspathResource(url)
   end load
 
-  class DirectoryClasspathResource(url: URL) extends WebResource:
+  class DirectoryClasspathResource(url: URL) extends Resource:
     override def contents(): Try[ByteArray] =
       // TODO Collect all jar entries & render as dir html
       ???
@@ -149,7 +149,7 @@ class ClasspathLoader(
       System.currentTimeMillis()
   end DirectoryClasspathResource
 
-  class FileClasspathResource(url: URL) extends WebResource:
+  class FileClasspathResource(url: URL) extends Resource:
     override def contents(): Try[ByteArray] =
       Try(url.openStream().readAllBytes())
         .mapFailure: t =>

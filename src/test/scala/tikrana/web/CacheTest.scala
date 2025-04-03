@@ -6,16 +6,16 @@ import tikrana.util.Types.{ByteArray, Millis}
 import collection.mutable
 import scala.util.{Success, Try}
 
-class WebCacheTest extends munit.FunSuite:
+class CacheTest extends munit.FunSuite:
   test("Retrieves existing resource computing payload only once"):
       var computed = 0
       val payload = "Some payload"
       val payloadTime = System.currentTimeMillis
 
-      val cache = WebCache(
+      val cache = Cache(
         loadResource = _ =>
           Some(
-            new WebResource:
+            new Resource:
               override def contents() =
                 computed += 1
                 Success(payload.getBytes)
@@ -36,7 +36,7 @@ class WebCacheTest extends munit.FunSuite:
       var computed = 0
       val payload = "Some payload"
 
-      val cache = WebCache(_ => { computed += 1; None })
+      val cache = Cache(_ => { computed += 1; None })
 
       verifyCacheEntry(cache, "non-existing")
       assertEquals(computed, 1)
@@ -49,11 +49,11 @@ class WebCacheTest extends munit.FunSuite:
       var payload = "Pass #1"
       var payloadTime = System.currentTimeMillis
 
-      val cache = WebCache(
+      val cache = Cache(
         loadResource = _ =>
           var previousPayload = payload
           Some(
-            new WebResource:
+            new Resource:
               override def contents() =
                 computed += 1
                 Success(payload.getBytes)
@@ -81,10 +81,10 @@ class WebCacheTest extends munit.FunSuite:
         "path/subpath2" -> ("subpath #1.2", System.currentTimeMillis)
       )
 
-      val cache = WebCache(
+      val cache = Cache(
         loadResource = path =>
           for _ <- repo.get(path)
-          yield new WebResource:
+          yield new Resource:
             override def contents(): Try[ByteArray] =
               computed += 1
               Success(repo(path)._1.getBytes)
@@ -118,14 +118,14 @@ class WebCacheTest extends munit.FunSuite:
   test("Provides consistent results on multi-threaded access"):
       ()
 
-  def verifyCacheEntry(cache: WebCache, path: Path) =
+  def verifyCacheEntry(cache: Cache, path: Path) =
     val result =
       cache
         .get(path)
         .getOrElse(fail(s"Failed to get resource '$path'"))
     assertEquals(result.map(String(_)), None)
 
-  def verifyCacheEntry(cache: WebCache, path: Path, payload: String) =
+  def verifyCacheEntry(cache: Cache, path: Path, payload: String) =
     val result =
       cache
         .get(path)
