@@ -2,13 +2,15 @@ package tikrana.web
 
 import Types.*
 import tikrana.util.Utils.*
+import tikrana.util.extension.OptionExtensions.swap
+
 
 import scala.collection.concurrent
 import scala.util.{Failure, Success, Try}
 
 // TODO Evict cache entries after some time-to-live
 class Cache(
-    val loadResource: Path => Option[Resource]
+    val loadResource: Path => Try[Option[Resource]]
 ):
 
   case class Entry(resource: Resource, payload: ByteArray)
@@ -31,12 +33,14 @@ class Cache(
     Success(None)
 
   private def getPayloadFor(path: Path): Try[Option[ByteArray]] =
-    loadResource(path) match
-      case Some(resource) =>
-        for payload <- getPayloadFor(path, resource)
-        yield Some(payload)
-      case None =>
-        Success(None)
+    for 
+      resourceOpt <- loadResource(path)
+      resourceOptTry = 
+        for 
+          resource <- resourceOpt
+        yield getPayloadFor(path, resource)
+      resourceTryOpt <- resourceOptTry.swap
+    yield resourceTryOpt
 
   private def getPayloadFor(
       path: Path,

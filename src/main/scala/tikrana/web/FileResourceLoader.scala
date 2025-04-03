@@ -22,7 +22,7 @@ class FileLoader(
     val baseDirectory: Directory,
     val indexFiles: IndexFiles
 ) extends ResourceLoader:
-  override def load(path: Path): Try[Option[Resource]] =
+  override def loadResource(path: Path): Try[Option[Resource]] =
     Try:
      val file =
        if path.isEmpty then baseDirectory

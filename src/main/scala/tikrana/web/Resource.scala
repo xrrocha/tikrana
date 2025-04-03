@@ -7,7 +7,7 @@ import tikrana.util.Utils.*
 import scala.util.Try
 
 trait ResourceLoader:
-  def load(path: Path): Try[Option[Resource]]
+  def loadResource(path: Path): Try[Option[Resource]]
 
 trait Resource:
   def contents(): Try[ByteArray]

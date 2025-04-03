@@ -23,7 +23,7 @@ class ClasspathLoader(
   lazy val resourceMap: Try[Map[EntryName, Resource]] =
     ClasspathLoader.scanPackage(packageName, indexFiles)
 
-  override def load(path: Path): Try[Option[Resource]] =
+  override def loadResource(path: Path): Try[Option[Resource]] =
     for
       map <- resourceMap
       resource <- Try(map.get(path))

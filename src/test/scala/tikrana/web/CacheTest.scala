@@ -14,15 +14,17 @@ class CacheTest extends munit.FunSuite:
 
       val cache = Cache(
         loadResource = _ =>
-          Some(
-            new Resource:
-              override def contents() =
-                computed += 1
-                Success(payload.getBytes)
-              override def stillExists() =
-                true
-              override def lastModified(): Millis =
-                payloadTime
+          Try(
+            Some(
+              new Resource:
+                override def contents() =
+                  computed += 1
+                  Success(payload.getBytes)
+                override def stillExists() =
+                  true
+                override def lastModified(): Millis =
+                  payloadTime
+            )
           )
       )
 
@@ -36,7 +38,7 @@ class CacheTest extends munit.FunSuite:
       var computed = 0
       val payload = "Some payload"
 
-      val cache = Cache(_ => { computed += 1; None })
+      val cache = Cache(_ => { computed += 1; Success(None) })
 
       verifyCacheEntry(cache, "non-existing")
       assertEquals(computed, 1)
@@ -52,14 +54,16 @@ class CacheTest extends munit.FunSuite:
       val cache = Cache(
         loadResource = _ =>
           var previousPayload = payload
-          Some(
-            new Resource:
-              override def contents() =
-                computed += 1
-                Success(payload.getBytes)
-              override def stillExists() = true
-              override def lastModified(): Millis =
-                payloadTime
+          Try(
+            Some(
+              new Resource:
+                override def contents() =
+                  computed += 1
+                  Success(payload.getBytes)
+                override def stillExists() = true
+                override def lastModified(): Millis =
+                  payloadTime
+            )
           )
       )
 
@@ -72,7 +76,6 @@ class CacheTest extends munit.FunSuite:
       verifyCacheEntry(cache, "path", "Pass #2")
       assertEquals(computed, 2)
 
-
   test("Removes cache entry on resource vanishing"):
       var computed = 0
       val repo = mutable.Map[Path, (String, Millis)](
@@ -83,18 +86,20 @@ class CacheTest extends munit.FunSuite:
 
       val cache = Cache(
         loadResource = path =>
-          for _ <- repo.get(path)
-          yield new Resource:
-            override def contents(): Try[ByteArray] =
-              computed += 1
-              Success(repo(path)._1.getBytes)
-            override def stillExists() =
-              repo.contains(path)
-            override def lastModified(): Millis =
-              repo
-                .get(path)
-                .map(_._2)
-                .getOrElse(System.currentTimeMillis)
+          Try(
+            for _ <- repo.get(path)
+            yield new Resource:
+              override def contents(): Try[ByteArray] =
+                computed += 1
+                Success(repo(path)._1.getBytes)
+              override def stillExists() =
+                repo.contains(path)
+              override def lastModified(): Millis =
+                repo
+                  .get(path)
+                  .map(_._2)
+                  .getOrElse(System.currentTimeMillis)
+          )
       )
 
       verifyCacheEntry(cache, "path", "path #1")

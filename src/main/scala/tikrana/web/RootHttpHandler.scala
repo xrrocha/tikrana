@@ -16,17 +16,20 @@ import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  private val cache = Cache(
-    loadResource = path =>
+  private val cache = Cache:
+    path =>
       LazyList
         .from(config.loaders)
-        .map(_.load(path))
-        // FIXME Excluding failures silently ignores errors (w/404)
-        .filter(_.isSuccess)
-        .map(_.get)
-        .find(_.isDefined)
-        .flatten
-  )
+        .map: loader =>
+          loader.loadResource(path)
+        .find: tryOptResource =>
+          tryOptResource
+            .filter: optResource =>
+              optResource.isDefined
+            .map: optResource =>
+              optResource.get
+            .isSuccess
+        .get
 
   private val mimeTypes: Map[FileType, MimeType] =
     MimeTypes.DefaultMimeTypes ++ config.mimeTypes
