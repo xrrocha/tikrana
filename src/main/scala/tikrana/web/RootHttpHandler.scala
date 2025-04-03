@@ -48,9 +48,9 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
 
     val outcome =
       for
-        cachedEntry <- cache.get(path)
+        cachedPayload <- cache.get(path)
 
-        result = cachedEntry match
+        result = cachedPayload match
           case Some(payload) =>
             Result(HttpCode.OK, payload, getMimeTypeFor(path))
           case None =>
@@ -79,8 +79,8 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
 
   private[web] def getMimeTypeFor(path: Path): MimeType =
     getFileType(path)
-     .flatMap(mimeTypes.get)
-     .getOrElse(MimeTypes.DefaultMimeType)
+      .flatMap(mimeTypes.get)
+      .getOrElse(MimeTypes.DefaultMimeType)
 
   private[web] def getFileType(path: Path): Option[FileType] =
     path.extension.map(_.toLowerCase)
@@ -111,10 +111,8 @@ class FileResource(file: File) extends WebResource:
       .mapFailure: t =>
         Fault(s"Error reading file '${file.getAbsolutePath}'", t)
           .logAsWarning(logger)
-  override def stillExists(): Boolean =
-    file.exists() && file.canRead
-  override def lastModified(): Millis =
-    file.lastModified()
+  override def stillExists(): Boolean = file.exists() && file.canRead
+  override def lastModified(): Millis = file.lastModified()
 end FileResource
 
 // TODO Check for resource (package) directories
