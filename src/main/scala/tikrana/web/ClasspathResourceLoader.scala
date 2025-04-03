@@ -65,7 +65,8 @@ object ClasspathLoader:
   end scanPackage
 
   def getAllEntryNames(pkgName: Path): Try[Set[EntryName]] =
-    val packageName = pkgName.trim
+
+    val packageName = ResourceLoader.removeSlashes(pkgName)
 
     for
       _ <- Try:
