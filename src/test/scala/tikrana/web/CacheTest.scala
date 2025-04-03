@@ -12,10 +12,10 @@ class CacheTest extends munit.FunSuite:
       val payload = "Some payload"
       val payloadTime = System.currentTimeMillis
 
-      val cache = Cache(
-        loadResource = _ =>
-          Try(
-            Some(
+      val loader = new ResourceLoader:
+        override def loadResource(path: Path): Try[Option[Resource]] =
+          Try:
+            Some:
               new Resource:
                 override def contents() =
                   computed += 1
@@ -24,9 +24,7 @@ class CacheTest extends munit.FunSuite:
                   true
                 override def lastModified(): Millis =
                   payloadTime
-            )
-          )
-      )
+      val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", payload)
       assertEquals(computed, 1)
@@ -38,7 +36,11 @@ class CacheTest extends munit.FunSuite:
       var computed = 0
       val payload = "Some payload"
 
-      val cache = Cache(_ => { computed += 1; Success(None) })
+      val loader = new ResourceLoader:
+        override def loadResource(path: Path): Try[Option[Resource]] =
+          computed += 1
+          Success(None)
+      val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "non-existing")
       assertEquals(computed, 1)
@@ -51,11 +53,11 @@ class CacheTest extends munit.FunSuite:
       var payload = "Pass #1"
       var payloadTime = System.currentTimeMillis
 
-      val cache = Cache(
-        loadResource = _ =>
+      val loader = new ResourceLoader:
+        override def loadResource(path: Path): Try[Option[Resource]] =
           var previousPayload = payload
-          Try(
-            Some(
+          Try:
+            Some:
               new Resource:
                 override def contents() =
                   computed += 1
@@ -63,9 +65,7 @@ class CacheTest extends munit.FunSuite:
                 override def stillExists() = true
                 override def lastModified(): Millis =
                   payloadTime
-            )
-          )
-      )
+      val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", "Pass #1")
       assertEquals(computed, 1)
@@ -84,9 +84,9 @@ class CacheTest extends munit.FunSuite:
         "path/subpath2" -> ("subpath #1.2", System.currentTimeMillis)
       )
 
-      val cache = Cache(
-        loadResource = path =>
-          Try(
+      val loader = new ResourceLoader:
+        override def loadResource(path: Path): Try[Option[Resource]] =
+          Try:
             for _ <- repo.get(path)
             yield new Resource:
               override def contents(): Try[ByteArray] =
@@ -99,8 +99,7 @@ class CacheTest extends munit.FunSuite:
                   .get(path)
                   .map(_._2)
                   .getOrElse(System.currentTimeMillis)
-          )
-      )
+      val cache = Cache(Seq(loader))
 
       verifyCacheEntry(cache, "path", "path #1")
       assertEquals(computed, 1)

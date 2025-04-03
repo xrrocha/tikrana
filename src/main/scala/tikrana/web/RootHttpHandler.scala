@@ -14,26 +14,15 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
+import scala.annotation.tailrec
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  private val cache = Cache:
-    path =>
-      LazyList
-        .from(config.loaders)
-        .map: loader =>
-          loader.loadResource(path)
-        .find: tryOptResource =>
-          tryOptResource
-            .filter: optResource =>
-              optResource.isDefined
-            .map: optResource =>
-              optResource.get
-            .isSuccess
-        .get
-
+  private val cache = Cache(config.loaders)
+              
   private val mimeTypes: Map[FileType, MimeType] =
     MimeTypes.DefaultMimeTypes ++ config.mimeTypes
 
+  // TODO Map unexpected failures to HttpCode.INTERNAL_SERVER_ERROR
   override def handle(exchange: HttpExchange): Unit =
     val path = getPath(exchange)
 
