@@ -15,16 +15,15 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler}
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-object RootHttpHandler:
-  def indexFile: Path = "index.html"
-end RootHttpHandler
-
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
   private val cache = Cache(
     loadResource = path =>
       LazyList
         .from(config.loaders)
         .map(_.load(path))
+        // FIXME Excluding failures silently ignores errors (w/404)
+        .filter(_.isSuccess)
+        .map(_.get)
         .find(_.isDefined)
         .flatten
   )

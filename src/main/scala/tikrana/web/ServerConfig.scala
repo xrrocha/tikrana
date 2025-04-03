@@ -18,7 +18,8 @@ end Protocol
 case class HandlerConfig private[web] (
     classLoader: ClassLoader,
     mimeTypes: Map[Extension, MimeType],
-    loaders: Seq[ResourceLoader]
+    loaders: Seq[ResourceLoader],
+    indexFiles: IndexFiles
 )
 
 // TODO Configure executor for WebServer (w/virtual threads)
@@ -46,7 +47,9 @@ object ServerConfig:
         System.getProperty("user.dir")
       ),
       basePackage: Option[Path] = None,
-      classLoader: ClassLoader = ctxClassLoader
+      classLoader: ClassLoader = ctxClassLoader,
+      indexFilenames: Seq[Path] = IndexFiles.defaultBaseNames,
+      indexFileExtensions: Seq[Path] = IndexFiles.defaultExtensions
   ): Try[ServerConfig] =
     Try:
         val inetSocketAddress =
@@ -81,6 +84,20 @@ object ServerConfig:
           s"Unreadable base package: '${basePackage.get}'"
         )
 
+        require(
+          indexFilenames.nonEmpty,
+          "Index file names cannot be empty"
+        )
+        require(
+          indexFileExtensions.nonEmpty,
+          "Index file extensions cannot be empty"
+        )
+
+        val indexFiles = IndexFiles(
+          indexFilenames,
+          indexFileExtensions
+        )
+
         new ServerConfig(
           protocol,
           inetSocketAddress,
@@ -91,16 +108,22 @@ object ServerConfig:
             mimeTypes,
             Seq(
               baseDirectory
-                .map(dir => FileLoader(File(dir))),
+                .map(dir => FileLoader(File(dir), indexFiles)),
               basePackage
                 .flatMap(pkg => getResource(s"$pkg/", classLoader))
                 .map: url =>
                   val uri = url.toURI
-                  if uri.getScheme == "file" then FileLoader(File(uri))
-                  else ClasspathLoader(basePackage.get, classLoader)
+                  if uri.getScheme == "file" then FileLoader(File(uri), indexFiles)
+                  else
+                    ClasspathLoader(
+                      basePackage.get,
+                      classLoader,
+                      indexFiles
+                    )
             )
               .filter(_.isDefined)
-              .map(_.get)
+              .map(_.get),
+            indexFiles
           )
         )
   end apply
