@@ -8,6 +8,7 @@ enum HttpCode(val code: Int, val message: String):
   case BAD_REQUEST extends HttpCode(400, "Bad Request")
   case UNAUTHORIZED extends HttpCode(401, "Not Authorized")
   case NOT_FOUND extends HttpCode(404, "Not Found")
+  case INTERNAL_SERVER_ERROR extends HttpCode(500, "Internal Server Error")
 end HttpCode
 
 case class Result(
