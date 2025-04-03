@@ -44,10 +44,11 @@ class Cache(
   ): Try[ByteArray] =
     for
       payload <- resource.contents()
-      _ = cache(path) = (
-        Entry(resource, payload),
-        resource.lastModified()
-      )
     yield payload
+      .also: bytes =>
+        cache(path) = (
+          Entry(resource, bytes),
+          resource.lastModified()
+        )
 
 end Cache
