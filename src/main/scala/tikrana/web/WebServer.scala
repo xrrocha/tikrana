@@ -60,13 +60,19 @@ object WebServer:
   // http://localhost:1960
   @main
   def run() =
-    for
-      config <- ServerConfig()
-      server <- WebServer(config).start()
-    do
-      logger.info(s"Web server running on ${config.uri}. Ctrl-C to shutdown...")
-      // TODO Only `sys.runtime.addShutdownHook` actually works...
-      sys.addShutdownHook:
-          logger.info(s"Shutting down web server at ${config.uri}...")
-          server.stop()
-    end for
+    val outcome =
+      for
+        config <- ServerConfig()
+        server <- WebServer(config).start()
+      yield (config.uri, server)
+
+    outcome match
+      case Success((uri, server)) =>
+        logger.info(s"Web server running on $uri. Ctrl-C to shutdown...")
+        // TODO Only `sys.runtime.addShutdownHook` actually works...
+        sys.addShutdownHook:
+            logger.info(s"Shutting down web server at $uri...")
+            server.stop()
+      case Failure(err) =>
+        logger.severe(s"Error starting web server: ${err.errorMessage}")
+        sys.exit(1)
