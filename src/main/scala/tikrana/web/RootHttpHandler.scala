@@ -15,7 +15,7 @@ import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
-  private val cache = Cache(config.loaders)
+  private val resourceManager = ResourceManager(config.loaders)
 
   private val mimeTypes: Map[FileType, MimeType] =
     MimeTypes.DefaultMimeTypes ++ config.mimeTypes
@@ -26,7 +26,7 @@ class RootHttpHandler(config: HandlerConfig) extends HttpHandler:
 
     val outcome =
       for
-        cachedPayload <- cache.get(path)
+        cachedPayload <- resourceManager.get(path)
 
         result = cachedPayload match
           case Some(payload) =>

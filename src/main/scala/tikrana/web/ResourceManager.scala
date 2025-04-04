@@ -8,7 +8,7 @@ import scala.collection.concurrent
 import scala.util.{Failure, Success, Try}
 
 // TODO Evict cache entries after some time-to-live
-class Cache(val loaders: Seq[ResourceLoader]):
+class ResourceManager(val loaders: Seq[ResourceLoader]):
 
   case class Entry(resource: Resource, payload: ByteArray)
   val cache = concurrent.TrieMap[Path, (Entry, Millis)]()
@@ -66,4 +66,4 @@ class Cache(val loaders: Seq[ResourceLoader]):
     end scan
     scan(loaders)
   end loadResource
-end Cache
+end ResourceManager

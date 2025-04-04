@@ -24,7 +24,7 @@ class CacheTest extends munit.FunSuite:
                       true
                     override def lastModified(): Millis =
                       payloadTime
-      val cache = Cache(Seq(loader))
+      val cache = ResourceManager(Seq(loader))
 
       verifyCacheEntry(cache, "path", payload)
       assertEquals(computed, 1)
@@ -40,7 +40,7 @@ class CacheTest extends munit.FunSuite:
         override def loadResource(path: Path): Try[Option[Resource]] =
           computed += 1
           Success(None)
-      val cache = Cache(Seq(loader))
+      val cache = ResourceManager(Seq(loader))
 
       verifyCacheEntry(cache, "non-existing")
       assertEquals(computed, 1)
@@ -65,7 +65,7 @@ class CacheTest extends munit.FunSuite:
                     override def stillExists() = true
                     override def lastModified(): Millis =
                       payloadTime
-      val cache = Cache(Seq(loader))
+      val cache = ResourceManager(Seq(loader))
 
       verifyCacheEntry(cache, "path", "Pass #1")
       assertEquals(computed, 1)
@@ -99,7 +99,7 @@ class CacheTest extends munit.FunSuite:
                     .get(path)
                     .map(_._2)
                     .getOrElse(System.currentTimeMillis)
-      val cache = Cache(Seq(loader))
+      val cache = ResourceManager(Seq(loader))
 
       verifyCacheEntry(cache, "path", "path #1")
       assertEquals(computed, 1)
@@ -122,14 +122,14 @@ class CacheTest extends munit.FunSuite:
   test("Provides consistent results on multi-threaded access"):
       ()
 
-  def verifyCacheEntry(cache: Cache, path: Path) =
+  def verifyCacheEntry(cache: ResourceManager, path: Path) =
     val result =
       cache
         .get(path)
         .getOrElse(fail(s"Failed to get resource '$path'"))
     assertEquals(result.map(String(_)), None)
 
-  def verifyCacheEntry(cache: Cache, path: Path, payload: String) =
+  def verifyCacheEntry(cache: ResourceManager, path: Path, payload: String) =
     val result =
       cache
         .get(path)
