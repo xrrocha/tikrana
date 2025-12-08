@@ -1,0 +1,9 @@
+._*
+~*.*
+CLAUDE.md
+.DS_Store
+.idea/
+local/
+*.log
+.*.sw?
+.vscode/
