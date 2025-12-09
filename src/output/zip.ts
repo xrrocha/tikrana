@@ -1,7 +1,7 @@
 /**
  * ZIP Output Module
  *
- * Generates ZIP files containing cabecera.txt and detalle.txt
+ * Generates ZIP files containing header and detail text files
  * and triggers browser download.
  */
 

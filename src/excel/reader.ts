@@ -1,7 +1,7 @@
 /**
  * Excel Reader Module
  *
- * SheetJS-based Excel reader that mirrors the Kotlin excel2erp implementation.
+ * SheetJS-based Excel reader for extracting data from spreadsheets.
  * Supports both .xls (BIFF) and .xlsx (Open XML) formats.
  *
  * Key concepts:
@@ -53,8 +53,8 @@ export function colToLetter(col: number): string {
 }
 
 /**
- * Format a cell value to string, matching Kotlin's behavior.
- * - Dates: YYYYMMDD (BASIC_ISO_DATE format)
+ * Format a cell value to string.
+ * - Dates: YYYYMMDD format
  * - Numbers: Up to 12 integer digits, up to 2 decimal places, dot as separator
  * - Strings: As-is
  * - Empty/null: empty string
@@ -92,7 +92,7 @@ export function formatCellValue(value: unknown, isDateCell: boolean = false): st
 }
 
 /**
- * Format date as YYYYMMDD (BASIC_ISO_DATE, matching Kotlin's DateTimeFormatter.BASIC_ISO_DATE)
+ * Format date as YYYYMMDD (ISO basic date format).
  */
 export function formatDate(date: Date): string {
   const year = date.getFullYear().toString().padStart(4, '0');
@@ -102,7 +102,7 @@ export function formatDate(date: Date): string {
 }
 
 /**
- * Format number matching Kotlin's DecimalFormat("############.##")
+ * Format number with up to 2 decimal places.
  * - Up to 12 integer digits
  * - Up to 2 decimal places (only if needed)
  * - Dot as decimal separator

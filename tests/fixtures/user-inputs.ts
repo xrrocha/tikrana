@@ -21,7 +21,7 @@
  */
 export const FIXED_USER_INPUTS: Record<string, Record<string, string>> = {
   coral: {
-    DocDueDate: '20240120',  // Fixed date, YYYYMMDD format (no dashes per excel2erp output)
+    DocDueDate: '20240120',  // Fixed date, YYYYMMDD format
   },
   rosado: {
     DocDueDate: '20240120',

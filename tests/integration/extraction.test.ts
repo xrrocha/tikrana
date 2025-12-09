@@ -17,9 +17,9 @@ import type { AppConfig } from '../../src/config/types';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Paths
-const YAML_CONFIG_PATH = path.join(__dirname, '../../local/repos/pedidos-sap/wb-server.yaml');
-const EXCEL_FIXTURES_PATH = path.join(__dirname, '../fixtures/excel/legacy');
+// Paths - all fixtures under tests/fixtures/legacy/
+const YAML_CONFIG_PATH = path.join(__dirname, '../fixtures/legacy/wb-server.yaml');
+const EXCEL_FIXTURES_PATH = path.join(__dirname, '../fixtures/legacy/excel');
 
 let config: AppConfig;
 

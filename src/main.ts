@@ -16,6 +16,14 @@ import type { ValidationIssue } from './validation/errors';
 // Configuration URL - can be overridden via data attribute or query param
 const DEFAULT_CONFIG_URL = '/config.yaml';
 
+interface PreviewData {
+  header: Record<string, string | null>;
+  detail: Record<string, string | null>[];
+  headerContent: string;
+  detailContent: string;
+  zipFilename: string;
+}
+
 interface AppState {
   // State
   loading: boolean;
@@ -31,6 +39,7 @@ interface AppState {
   processing: boolean;
   success: boolean;
   successMessage: string;
+  preview: PreviewData | null;
 
   // Computed
   canSubmit: boolean;
@@ -40,6 +49,8 @@ interface AppState {
   onSourceChange(): void;
   onFileChange(event: Event): void;
   process(): Promise<void>;
+  confirmDownload(): Promise<void>;
+  cancelPreview(): void;
   clearMessages(): void;
   formatError(err: unknown): void;
   getSelectedSourceConfig(): { description: string; logo?: string } | null;
@@ -60,6 +71,7 @@ Alpine.data('app', (): AppState => ({
   processing: false,
   success: false,
   successMessage: '',
+  preview: null,
 
   get canSubmit(): boolean {
     if (!this.selectedSource || !this.file || this.processing) return false;
@@ -76,6 +88,7 @@ Alpine.data('app', (): AppState => ({
     this.warnings = [];
     this.success = false;
     this.successMessage = '';
+    this.preview = null;
   },
 
   formatError(err: unknown) {
@@ -211,25 +224,52 @@ Alpine.data('app', (): AppState => ({
         throw new Error('Processing failed');
       }
 
-      // Generate and download ZIP
-      await downloadZip(
-        result.zipFilename!,
-        this.config.result.header.filename,
-        result.headerContent!,
-        this.config.result.detail.filename,
-        result.detailContent!
-      );
-
-      // Show success message
-      this.success = true;
-      this.successMessage = `Generated: ${result.zipFilename}`;
-      console.log(`Generated: ${result.zipFilename}`);
+      // Store preview data for user confirmation
+      this.preview = {
+        header: result.extractedData!.header,
+        detail: result.extractedData!.detail,
+        headerContent: result.headerContent!,
+        detailContent: result.detailContent!,
+        zipFilename: result.zipFilename!,
+      };
     } catch (err) {
       this.formatError(err);
       console.error('Processing error:', err);
     } finally {
       this.processing = false;
     }
+  },
+
+  async confirmDownload() {
+    if (!this.preview || !this.config) return;
+
+    try {
+      // Generate and download ZIP
+      await downloadZip(
+        this.preview.zipFilename,
+        this.config.result.header.filename,
+        this.preview.headerContent,
+        this.config.result.detail.filename,
+        this.preview.detailContent
+      );
+
+      // Show success message (use config template or default)
+      this.success = true;
+      const successTemplate = this.config.parameters?.successMessage ?? 'Generated: ${filename}';
+      this.successMessage = successTemplate.replace('${filename}', this.preview.zipFilename);
+      console.log(`Generated: ${this.preview.zipFilename}`);
+
+      // Clear preview after download
+      this.preview = null;
+    } catch (err) {
+      this.formatError(err);
+      console.error('Download error:', err);
+    }
+  },
+
+  cancelPreview() {
+    this.preview = null;
+    this.warnings = [];
   }
 }));
 

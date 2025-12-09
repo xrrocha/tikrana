@@ -96,7 +96,7 @@ test.describe('Output Parity: Excel Processing', () => {
       }
 
       // Upload Excel file (legacy = private client data, git-ignored)
-      const filePath = path.join(__dirname, `../../fixtures/excel/legacy/${excelFile}`);
+      const filePath = path.join(__dirname, `../../fixtures/legacy/excel/${excelFile}`);
       await ui.uploadFile(page, filePath);
 
       // Trigger download and capture
@@ -143,7 +143,7 @@ test.describe('Output Parity: Validation & UI', () => {
     await ui.selectSource(page, 'coral');
     await ui.fillInput(page, 'DocDueDate', '20240120');
 
-    const filePath = path.join(__dirname, '../../fixtures/excel/legacy/pedido-coral.xls');
+    const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
     // Trigger download
@@ -164,7 +164,7 @@ test.describe('Output Parity: Validation & UI', () => {
     await ui.fillInput(page, 'DocDueDate', '20240120');
 
     // Use coral file which should generate warnings for mismatched columns
-    const filePath = path.join(__dirname, '../../fixtures/excel/legacy/pedido-coral.xls');
+    const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
     // Trigger download
@@ -187,7 +187,7 @@ test.describe('Output Parity: Validation & UI', () => {
     await ui.selectSource(page, 'coral');
     await ui.fillInput(page, 'DocDueDate', '20240120');
 
-    const filePath = path.join(__dirname, '../../fixtures/excel/legacy/pedido-coral.xls');
+    const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
     // Process successfully

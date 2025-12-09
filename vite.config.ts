@@ -15,5 +15,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    fs: {
+      allow: ['.'],
+    },
   },
+  publicDir: 'tests/fixtures/legacy/assets',
 });

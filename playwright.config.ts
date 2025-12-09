@@ -5,6 +5,7 @@ const HEADED = process.env.HEADED === '1';  // Show browser window: HEADED=1 bun
 
 export default defineConfig({
   testDir: './tests/e2e',
+  snapshotDir: './tests/fixtures/legacy/snapshots',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

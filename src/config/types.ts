@@ -1,8 +1,7 @@
 /**
  * Configuration Types
  *
- * TypeScript interfaces mirroring the YAML configuration structure from excel2erp.
- * These define the schema for source configurations.
+ * TypeScript interfaces defining the YAML configuration schema.
  */
 
 /**

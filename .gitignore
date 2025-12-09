@@ -25,7 +25,7 @@ playwright-report/
 coverage/
 
 # Private test fixtures (client data)
-tests/fixtures/excel/legacy/
+tests/fixtures/legacy/
 
 # Private E2E tests (LHO client-specific)
 tests/e2e/lho/

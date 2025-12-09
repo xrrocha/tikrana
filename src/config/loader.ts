@@ -1,20 +1,17 @@
 /**
  * Configuration Loader
  *
- * Supports loading configuration from YAML (for compatibility with existing excel2erp configs)
- * and JSON. YAML support maintains backward compatibility with existing users.
- *
- * The YAML structure mirrors wb-server.yaml from excel2erp:
- * - config.sources: source-specific extraction config
- * - config.result: output format config
+ * Loads application configuration from YAML or JSON.
+ * Configuration defines:
+ * - sources: extraction mappings for different input formats
+ * - result: output format specification
  */
 
 import YAML from 'yaml';
 import type { AppConfig, SourceConfig, ResultConfig, SourceProperty, DetailConfig, FileSpec, ResultProperty } from './types';
 
 /**
- * Raw YAML structure from wb-server.yaml (excel2erp format).
- * This matches the exact structure of the Kotlin config.
+ * Raw YAML structure as read from configuration file.
  */
 interface RawYamlConfig {
   port?: number;

@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
-const FIXTURES_DIR = './tests/fixtures/excel/legacy';
+const FIXTURES_DIR = './tests/fixtures/legacy/excel';
 
 function checkForDynamicFormulas(workbook: XLSX.WorkBook): string[] {
   const dynamicFormulas: string[] = [];

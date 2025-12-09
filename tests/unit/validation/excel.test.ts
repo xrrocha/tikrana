@@ -29,7 +29,7 @@ function createMockXlsData(): ArrayBuffer {
 }
 
 // Load a real test fixture
-const fixturesPath = path.join(__dirname, '../../../tests/fixtures/excel/legacy');
+const fixturesPath = path.join(__dirname, '../../../tests/fixtures/legacy/excel');
 
 function loadFixture(name: string): ArrayBuffer {
   const filePath = path.join(fixturesPath, name);

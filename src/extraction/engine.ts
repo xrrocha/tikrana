@@ -2,7 +2,6 @@
  * Extraction Engine
  *
  * Orchestrates Excel data extraction based on source configuration.
- * Mirrors the Kotlin excel2erp extraction logic.
  */
 
 import { ExcelReader, ExcelSheet } from '../excel/reader';
@@ -31,7 +30,6 @@ export interface ExtractedData {
 
 /**
  * Apply regex replacements to a value.
- * Mirrors Kotlin's SourceProperty.convert()
  */
 export function applyReplacements(value: string, replacements?: Record<string, string>): string {
   if (!replacements || Object.keys(replacements).length === 0) {
@@ -126,8 +124,7 @@ export function mergeUserInput(
 
 /**
  * Normalize date value to YYYYMMDD format.
- * Handles various input formats and strips non-digit characters.
- * Mirrors Kotlin's Property.normalize() for date fields.
+ * Strips all non-digit characters from the input.
  */
 export function normalizeDate(value: string): string {
   // Remove all non-digit characters
@@ -137,7 +134,6 @@ export function normalizeDate(value: string): string {
 /**
  * Expand property references in a string.
  * Replaces ${name} with the corresponding value from props.
- * Mirrors Kotlin's expand() function.
  */
 export function expand(template: string, props: Record<string, string | number | null | undefined>): string {
   return template.replace(/\$\{(\w+)\}/g, (_, name) => {
@@ -217,6 +213,7 @@ export interface ProcessingResult {
   headerContent?: string;
   detailContent?: string;
   zipFilename?: string;
+  extractedData?: ExtractedData;
   error?: TikranaError;
   warnings?: ValidationIssue[];
 }
@@ -342,6 +339,7 @@ export function processExcel(
       headerContent,
       detailContent,
       zipFilename,
+      extractedData: { header: headerData, detail },
       warnings: allWarnings,
     };
   } catch (err) {
