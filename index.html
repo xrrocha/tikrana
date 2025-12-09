@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tikrana - Excel to ERP</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #333; }
+    label { display: block; margin: 1rem 0 0.25rem; font-weight: 500; }
+    select, input { padding: 0.5rem; font-size: 1rem; }
+    select { min-width: 200px; }
+    input[type="file"] { margin: 0.5rem 0; }
+    button { margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .error { color: #dc2626; background: #fef2f2; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+    .loading { color: #6b7280; font-style: italic; }
+    .form-group { margin: 1rem 0; }
+    #dynamic-fields { margin: 1rem 0; }
+  </style>
+</head>
+<body>
+  <div x-data="app()" x-init="init()">
+    <h1>Tikrana - Excel to ERP</h1>
+
+    <!-- Loading state -->
+    <div x-show="loading" class="loading">Loading configuration...</div>
+
+    <!-- Main form (hidden while loading) -->
+    <form @submit.prevent="process" x-show="!loading">
+      <div class="form-group">
+        <label for="source">Source:</label>
+        <select id="source" name="source" x-model="selectedSource" @change="onSourceChange">
+          <option value="">-- Select source --</option>
+          <template x-for="source in sources" :key="source.name">
+            <option :value="source.name" x-text="source.description"></option>
+          </template>
+        </select>
+      </div>
+
+      <div id="dynamic-fields" x-show="selectedSource">
+        <!-- Dynamic fields based on selected source -->
+        <template x-for="field in dynamicFields" :key="field.name">
+          <div class="form-group">
+            <label :for="field.name" x-text="field.prompt + ':'"></label>
+            <input
+              :type="field.type === 'date' ? 'date' : 'text'"
+              :id="field.name"
+              :name="field.name"
+              x-model="formData[field.name]"
+              required
+            >
+          </div>
+        </template>
+
+        <div class="form-group">
+          <label for="file">Excel File:</label>
+          <input type="file" id="file" name="file" accept=".xls,.xlsx" @change="onFileChange" required>
+        </div>
+      </div>
+
+      <button type="submit" :disabled="!canSubmit" x-show="selectedSource">
+        <span x-show="!processing">Generate SAP File</span>
+        <span x-show="processing">Processing...</span>
+      </button>
+    </form>
+
+    <div class="error" x-show="error" x-text="error"></div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+port: 7070
+assetsDir: ./assets
+config:
+  name: pedidos
+  description: 'La Holandesa: Pedidos SAP Excel'
+  logo: logo-holandesa.png
+  parameters:
+    htmx: 'https://unpkg.com/htmx.org@1.8.4'
+    source: Cliente
+    workbook: Archivo pedido
+    submit: Generar Archivo SAP
+    extractionError: |
+      Error extrayendo pedido de archivo Excel.
+      Verifique que corresponde al cliente seleccionado
+  sources:
+    - name: coral
+      description: Coral Hipermercados
+      logo: logo-coral.png
+      defaultValues:
+        CardCode: C0190072002001
+      sheetIndex: 0 # OV024329
+      header:
+        - name: NumAtCard
+          locator: B3
+        - name: DocDate
+          locator: B7
+          replacements:
+            '-': ''
+      detail:
+        locator: A12
+        properties:
+          - name: ItemCode
+            locator: BARRA
+            replacements:
+              68077: PTQCH068077
+              68074: PTQH068074
+          - name: Quantity
+            locator: CANTIDAD
+    - name: rosado
+      description: El Rosado
+      logo: logo-elrosado.png
+      defaultValues:
+        CardCode: C0990004196001
+      sheetIndex: 0 # Hoja1
+      header:
+        - name: NumAtCard
+          locator: D2
+        - name: DocDate
+          locator: E2
+          replacements:
+            '\.': ''
+      detail:
+        locator: A1
+        properties:
+          - name: ItemCode
+            locator: codigoTamano
+          - name: Quantity
+            locator: cantidad
+    - name: santamaria
+      description: Santa María
+      logo: logo-santamaria.png
+      defaultValues:
+        CardCode: C1792060346001
+      sheetIndex: 0 # in
+      header: []
+      detail:
+        locator: A1
+        properties:
+          - name: ItemCode
+            locator: Codigo Barras Ref
+            replacements:
+              91868: 7861033002170
+              23041: 7861033003498
+              23042: 7861033003276
+          - name: Quantity
+            locator: Total Unidades
+    - name: supermaxi
+      description: SuperMaxi
+      logo: logo-supermaxi.png
+      defaultValues:
+        CardCode: C1790016919001
+      sheetIndex: 0 # in
+      header:
+        - name: NumAtCard
+          locator: G2
+        - name: DocDate
+          locator: D2
+        - name: DocDueDate
+          locator: E2
+      detail:
+        locator: B3
+        endValue: TOTOR
+        properties:
+          - name: ItemCode
+            locator: CODIGO BARRAS
+          - name: Quantity
+            locator: CANTID
+    - name: tia
+      description: Tiendas Industriales Asociadas
+      logo: logo-tia.png
+      defaultValues:
+        CardCode: C0990017514001
+      sheetIndex: 0 # Hoja1
+      header: []
+      detail:
+        locator: A1
+        properties:
+          - name: ItemCode
+            locator: BARRAS
+          - name: Quantity
+            locator: CANT (UNID)
+  result:
+    separator: "\t"
+    baseName: sap-pedido-${sourceName}-${NumAtCard}
+    header:
+      filename: cabecera.txt
+      properties:
+        - name: DocNum
+          fyi: Número de pedido SAP
+          defaultValue: 1
+        - name: DocEntry
+          defaultValue: 1
+        - name: DocType
+          defaultValue: dDocument_Items
+        - name: DocDate
+          type: date
+          prompt: Fecha de pedido
+        - name: DocDueDate
+          type: date
+          prompt: Fecha de entrega
+        - name: CardCode
+          prompt: RUC del cliente
+        - name: NumAtCard
+          prompt: Número de pedido
+      prolog: |
+        DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+        DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+    detail:
+      filename: detalle.txt
+      properties:
+        - name: DocNum
+          defaultValue: 1
+        - name: LineNum
+          defaultValue: ${index}
+        - name: ItemCode
+        - name: Quantity
+        - name: WhsCode
+          defaultValue: BD-PTE
+      prolog: |
+        ParentKey	LineNum	ItemCode	Quantity	WarehouseCode
+        DocNum	LineNum	ItemCode	Quantity	WhsCode
