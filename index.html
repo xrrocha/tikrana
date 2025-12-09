@@ -39,30 +39,29 @@
       min-height: 100vh;
     }
 
-    /* Top bar with company logo */
-    .top-bar {
-      background: white;
-      padding: 0.625rem 1.5rem;
+    /* Header bar with logo and title */
+    .header-bar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 0.75rem 1.5rem;
       display: flex;
       align-items: center;
-      box-shadow: var(--shadow);
+      gap: 1rem;
+      box-shadow: var(--shadow-md);
     }
 
-    .company-logo {
-      height: 44px;
+    .header-logo {
+      height: 40px;
       object-fit: contain;
+      background: white;
+      border-radius: 6px;
+      padding: 4px 8px;
     }
 
-    /* Title banner */
-    .title-banner {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    .header-title {
       color: white;
-      text-align: center;
-      padding: 0.875rem 1rem;
-      font-size: 1.125rem;
+      font-size: 1.25rem;
       font-weight: 600;
       letter-spacing: -0.01em;
-      box-shadow: var(--shadow-md);
     }
 
     /* Main container */
@@ -584,13 +583,11 @@
     <div class="loading-text">Procesando archivo...</div>
   </div>
 
-  <!-- Top bar with company logo -->
-  <div class="top-bar" x-show="!loading">
-    <img x-show="config?.logo" :src="config?.logo" :alt="config?.name" class="company-logo" x-cloak>
+  <!-- Header bar with logo and title -->
+  <div class="header-bar" x-show="!loading">
+    <img x-show="config?.logo" :src="config?.logo" :alt="config?.name" class="header-logo" x-cloak>
+    <span class="header-title" x-text="config?.description || 'Tikrana'"></span>
   </div>
-
-  <!-- Title banner -->
-  <div class="title-banner" x-show="!loading" x-text="config?.description || 'Tikrana'"></div>
 
   <!-- Loading state -->
   <div x-show="loading" class="loading-container" x-cloak>

@@ -120,6 +120,7 @@ export interface AppConfig {
     source: string;
     workbook: string;
     submit: string;
+    successMessage?: string;
     extractionError: string;
   };
   /** Available sources */

@@ -47,7 +47,8 @@ interface AppState {
   // Methods
   init(): Promise<void>;
   onSourceChange(): void;
-  onFileChange(event: Event): void;
+  onFileChange(event: Event): Promise<void>;
+  processForPreview(): Promise<void>;
   process(): Promise<void>;
   confirmDownload(): Promise<void>;
   cancelPreview(): void;
@@ -168,25 +169,23 @@ Alpine.data('app', (): AppState => ({
     }
   },
 
-  onFileChange(event: Event) {
+  async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.file = input.files?.[0] ?? null;
     this.clearMessages();
-  },
 
-  getSelectedSourceConfig() {
-    if (!this.config || !this.selectedSource) return null;
-    return this.config.sources.find(s => s.name === this.selectedSource) ?? null;
-  },
-
-  async process() {
-    this.clearMessages();
-
-    if (!this.file || !this.selectedSource || !this.config) {
-      this.error = 'Please select a source and file';
-      this.errorSuggestions = [];
-      return;
+    // If we have a file, source selected, and all required fields filled, process immediately
+    if (this.file && this.selectedSource && this.config) {
+      // Check if all required fields are filled
+      const allFieldsFilled = this.dynamicFields.every(field => this.formData[field.name]);
+      if (allFieldsFilled) {
+        await this.processForPreview();
+      }
     }
+  },
+
+  async processForPreview() {
+    if (!this.file || !this.selectedSource || !this.config) return;
 
     this.processing = true;
 
@@ -238,6 +237,24 @@ Alpine.data('app', (): AppState => ({
     } finally {
       this.processing = false;
     }
+  },
+
+  getSelectedSourceConfig() {
+    if (!this.config || !this.selectedSource) return null;
+    return this.config.sources.find(s => s.name === this.selectedSource) ?? null;
+  },
+
+  async process() {
+    this.clearMessages();
+
+    if (!this.file || !this.selectedSource || !this.config) {
+      this.error = 'Please select a source and file';
+      this.errorSuggestions = [];
+      return;
+    }
+
+    // Reprocess to update preview with any form field changes
+    await this.processForPreview();
   },
 
   async confirmDownload() {

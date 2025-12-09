@@ -65,9 +65,9 @@ const ui = {
 
   /** Upload file - Kotlin uses 'wbFile', TypeScript uses 'file' */
   async uploadFile(page: Page, filePath: string) {
-    // Try both possible input names
+    // File input may be hidden for styling - use toBeAttached
     const fileInput = page.locator('input[type="file"]');
-    await expect(fileInput).toBeVisible({ timeout: 5000 });
+    await expect(fileInput).toBeAttached({ timeout: 5000 });
     await fileInput.setInputFiles(filePath);
   },
 
@@ -76,6 +76,35 @@ const ui = {
     const submitBtn = page.locator('button[type="submit"], input[type="submit"]');
     await expect(submitBtn).toBeVisible({ timeout: 5000 });
     await submitBtn.click();
+  },
+
+  /**
+   * Wait for preview to appear and click download button.
+   * TypeScript shows preview after file upload, then user confirms download.
+   * Kotlin downloads immediately on submit.
+   */
+  async confirmDownload(page: Page) {
+    if (USE_KOTLIN) {
+      // Kotlin downloads immediately - nothing to confirm
+      return;
+    }
+
+    // TypeScript: wait for preview to appear and click download button
+    const downloadBtn = page.locator('.btn-confirm');
+    await expect(downloadBtn).toBeVisible({ timeout: 5000 });
+    await downloadBtn.click();
+  },
+
+  /**
+   * Wait for preview to appear (TypeScript only).
+   * Useful when we need to verify preview content before downloading.
+   */
+  async waitForPreview(page: Page) {
+    if (USE_KOTLIN) {
+      return;
+    }
+    const previewCard = page.locator('.preview-card');
+    await expect(previewCard).toBeVisible({ timeout: 5000 });
   },
 };
 
@@ -99,9 +128,11 @@ test.describe('Output Parity: Excel Processing', () => {
       const filePath = path.join(__dirname, `../../fixtures/legacy/excel/${excelFile}`);
       await ui.uploadFile(page, filePath);
 
-      // Trigger download and capture
+      // TypeScript: preview appears after file upload, then confirm download
+      // Kotlin: submit triggers immediate download
       const downloadPromise = page.waitForEvent('download');
       await ui.submit(page);
+      await ui.confirmDownload(page);
       const download = await downloadPromise;
 
       // Validate filename pattern (not exact match)
@@ -146,16 +177,17 @@ test.describe('Output Parity: Validation & UI', () => {
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
-    // Trigger download
+    // Trigger download (preview shows after upload, then confirm download)
     const downloadPromise = page.waitForEvent('download');
     await ui.submit(page);
+    await ui.confirmDownload(page);
     await downloadPromise;
 
-    // TypeScript shows success message
+    // TypeScript shows success message after download completes
     const successBox = page.locator('.message-box.success');
     await expect(successBox).toBeVisible({ timeout: 5000 });
     const successText = await successBox.textContent();
-    expect(successText).toContain('Success');
+    expect(successText).toContain('Generado');  // Config uses Spanish "Generado: ${filename}"
   });
 
   test('shows warnings when applicable', async ({ page }) => {
@@ -167,9 +199,10 @@ test.describe('Output Parity: Validation & UI', () => {
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
-    // Trigger download
+    // Trigger download (preview shows after upload, then confirm download)
     const downloadPromise = page.waitForEvent('download');
     await ui.submit(page);
+    await ui.confirmDownload(page);
     await downloadPromise;
 
     // Check for any warnings (structure may vary)
@@ -190,9 +223,10 @@ test.describe('Output Parity: Validation & UI', () => {
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
     await ui.uploadFile(page, filePath);
 
-    // Process successfully
+    // Process successfully (preview shows after upload, then confirm download)
     const downloadPromise = page.waitForEvent('download');
     await ui.submit(page);
+    await ui.confirmDownload(page);
     await downloadPromise;
 
     // Success message should be visible

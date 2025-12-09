@@ -25,6 +25,7 @@ interface RawYamlConfig {
       source: string;
       workbook: string;
       submit: string;
+      successMessage?: string;
       extractionError: string;
     };
     sources: RawSourceConfig[];
@@ -122,6 +123,7 @@ function transformConfig(raw: RawYamlConfig['config']): AppConfig {
       source: raw.parameters.source,
       workbook: raw.parameters.workbook,
       submit: raw.parameters.submit,
+      successMessage: raw.parameters.successMessage,
       extractionError: raw.parameters.extractionError,
     },
     sources: raw.sources.map(transformSource),
