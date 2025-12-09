@@ -127,13 +127,33 @@ export function formatNumber(num: number): string {
 export class ExcelReader {
   private workbook: XLSX.WorkBook;
 
-  constructor(data: ArrayBuffer | Uint8Array) {
-    this.workbook = XLSX.read(data, {
-      type: 'array',
-      cellDates: false,  // Keep dates as serial numbers for precise formatting
-      cellNF: true,      // Keep number formats for date detection
-      cellStyles: false, // Don't need styles
-    });
+  /**
+   * Create an ExcelReader from raw Excel data or a pre-parsed workbook.
+   *
+   * @param data Raw Excel file data (ArrayBuffer/Uint8Array) or pre-parsed XLSX.WorkBook
+   */
+  constructor(data: ArrayBuffer | Uint8Array | XLSX.WorkBook) {
+    // If it's already a workbook (from validation), use it directly
+    if (this.isWorkbook(data)) {
+      this.workbook = data;
+    } else {
+      this.workbook = XLSX.read(data, {
+        type: 'array',
+        cellDates: false,  // Keep dates as serial numbers for precise formatting
+        cellNF: true,      // Keep number formats for date detection
+        cellStyles: false, // Don't need styles
+      });
+    }
+  }
+
+  /**
+   * Type guard to check if data is already a parsed workbook.
+   */
+  private isWorkbook(data: ArrayBuffer | Uint8Array | XLSX.WorkBook): data is XLSX.WorkBook {
+    return data !== null &&
+           typeof data === 'object' &&
+           'SheetNames' in data &&
+           'Sheets' in data;
   }
 
   /**

@@ -45,7 +45,7 @@ export default defineConfig({
       }
     : {
         // Start TypeScript dev server
-        command: 'bun run dev',
+        command: '/home/ricardo/.bun/bin/bun run dev',
         url: 'http://localhost:5173',
         reuseExistingServer: !process.env.CI,
         timeout: 10000,

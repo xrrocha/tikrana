@@ -5,68 +5,577 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tikrana - Excel to ERP</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-    h1 { color: #333; }
-    label { display: block; margin: 1rem 0 0.25rem; font-weight: 500; }
-    select, input { padding: 0.5rem; font-size: 1rem; }
-    select { min-width: 200px; }
-    input[type="file"] { margin: 0.5rem 0; }
-    button { margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-    button:hover { background: #1d4ed8; }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .error { color: #dc2626; background: #fef2f2; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
-    .loading { color: #6b7280; font-style: italic; }
-    .form-group { margin: 1rem 0; }
-    #dynamic-fields { margin: 1rem 0; }
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --primary-light: #818cf8;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --warning-border: #fde68a;
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --error-border: #fecaca;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --radius: 8px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg), 0 0 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .app-logo {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: white;
+      padding: 4px;
+    }
+
+    .header-text {
+      flex: 1;
+    }
+
+    .card-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .card-header p {
+      margin: 0.25rem 0 0;
+      opacity: 0.9;
+      font-size: 0.85rem;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+    }
+
+    select, input[type="text"], input[type="date"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--gray-800);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    select:hover, input[type="text"]:hover, input[type="date"]:hover {
+      border-color: var(--gray-300);
+    }
+
+    select:focus, input[type="text"]:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Source indicator with logo */
+    .source-indicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--gray-50);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--gray-200);
+    }
+
+    .source-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: white;
+      padding: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .source-info {
+      flex: 1;
+    }
+
+    .source-name {
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: 1rem;
+    }
+
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.35rem;
+    }
+
+    .source-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s ease;
+      background: var(--gray-50);
+      cursor: pointer;
+    }
+
+    .file-input-wrapper:hover {
+      border-color: var(--primary-light);
+      background: rgba(79, 70, 229, 0.03);
+    }
+
+    .file-input-wrapper.has-file {
+      border-color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-input-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 0.75rem;
+      color: var(--gray-400);
+    }
+
+    .file-input-wrapper.has-file .file-input-icon {
+      color: var(--success);
+    }
+
+    .file-input-text {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+
+    .file-input-text strong {
+      color: var(--primary);
+    }
+
+    .file-name {
+      margin-top: 0.5rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: 0.9rem;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-md);
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    button[type="submit"]:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button[type="submit"]:disabled {
+      background: var(--gray-300);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Message boxes */
+    .message-box {
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success);
+    }
+
+    .success strong {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .success-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning);
+    }
+
+    .warning-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .warning-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .warning-list {
+      margin: 0;
+      padding-left: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    .warning-list li {
+      margin: 0.25rem 0;
+    }
+
+    .error {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error);
+    }
+
+    .error-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .error-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .error-suggestions {
+      margin: 0.75rem 0 0;
+      padding-left: 1.5rem;
+      color: #991b1b;
+      font-size: 0.85rem;
+    }
+
+    .error-suggestions li {
+      margin: 0.25rem 0;
+    }
+
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--gray-500);
+    }
+
+    .loading-text {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* Processing overlay */
+    .processing-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .processing-text {
+      margin-top: 1rem;
+      color: var(--gray-700);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    /* Utility */
+    [x-cloak] { display: none !important; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 1rem 2rem 1.5rem;
+      border-top: 1px solid var(--gray-100);
+      font-size: 0.75rem;
+      color: var(--gray-400);
+    }
+
+    .footer a {
+      color: var(--gray-500);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
-  <div x-data="app()" x-init="init()">
-    <h1>Tikrana - Excel to ERP</h1>
-
-    <!-- Loading state -->
-    <div x-show="loading" class="loading">Loading configuration...</div>
-
-    <!-- Main form (hidden while loading) -->
-    <form @submit.prevent="process" x-show="!loading">
-      <div class="form-group">
-        <label for="source">Source:</label>
-        <select id="source" name="source" x-model="selectedSource" @change="onSourceChange">
-          <option value="">-- Select source --</option>
-          <template x-for="source in sources" :key="source.name">
-            <option :value="source.name" x-text="source.description"></option>
-          </template>
-        </select>
-      </div>
-
-      <div id="dynamic-fields" x-show="selectedSource">
-        <!-- Dynamic fields based on selected source -->
-        <template x-for="field in dynamicFields" :key="field.name">
-          <div class="form-group">
-            <label :for="field.name" x-text="field.prompt + ':'"></label>
-            <input
-              :type="field.type === 'date' ? 'date' : 'text'"
-              :id="field.name"
-              :name="field.name"
-              x-model="formData[field.name]"
-              required
-            >
+  <div class="container" x-data="app()" x-init="init()">
+    <div class="card">
+      <!-- Dynamic header from config -->
+      <div class="card-header">
+        <div class="header-content">
+          <img x-show="config?.logo" :src="config?.logo" :alt="config?.name" class="app-logo" x-cloak>
+          <div class="header-text">
+            <h1 x-text="config?.name || 'Tikrana'"></h1>
+            <p x-text="config?.description || 'Excel to ERP Data Translation'"></p>
           </div>
-        </template>
-
-        <div class="form-group">
-          <label for="file">Excel File:</label>
-          <input type="file" id="file" name="file" accept=".xls,.xlsx" @change="onFileChange" required>
         </div>
       </div>
 
-      <button type="submit" :disabled="!canSubmit" x-show="selectedSource">
-        <span x-show="!processing">Generate SAP File</span>
-        <span x-show="processing">Processing...</span>
-      </button>
-    </form>
+      <!-- Processing overlay -->
+      <div x-show="processing" class="processing-overlay" x-cloak>
+        <div class="spinner"></div>
+        <div class="processing-text">Processing Excel file...</div>
+      </div>
 
-    <div class="error" x-show="error" x-text="error"></div>
+      <!-- Loading state -->
+      <div x-show="loading" class="loading" x-cloak>
+        <div class="spinner" style="margin: 0 auto;"></div>
+        <div class="loading-text">Loading configuration...</div>
+      </div>
+
+      <!-- Main form -->
+      <div class="card-body" x-show="!loading">
+        <form @submit.prevent="process">
+          <div class="form-group">
+            <label for="source" x-text="config?.parameters?.source || 'Source'"></label>
+            <select id="source" name="source" x-model="selectedSource" @change="onSourceChange">
+              <option value="">Select a source...</option>
+              <template x-for="source in sources" :key="source.name">
+                <option :value="source.name" x-text="source.description"></option>
+              </template>
+            </select>
+          </div>
+
+          <div x-show="selectedSource" x-transition>
+            <!-- Source indicator with logo -->
+            <div class="source-indicator">
+              <img
+                x-show="getSelectedSourceConfig()?.logo"
+                :src="getSelectedSourceConfig()?.logo"
+                :alt="getSelectedSourceConfig()?.description"
+                class="source-logo"
+                x-cloak
+              >
+              <div class="source-info">
+                <div class="source-name" x-text="getSelectedSourceConfig()?.description || ''"></div>
+                <div class="source-badge">
+                  <span class="source-badge-dot"></span>
+                  <span x-text="selectedSource"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic fields based on selected source -->
+            <template x-for="field in dynamicFields" :key="field.name">
+              <div class="form-group">
+                <label :for="field.name" x-text="field.prompt"></label>
+                <input
+                  :type="field.type === 'date' ? 'date' : 'text'"
+                  :id="field.name"
+                  :name="field.name"
+                  x-model="formData[field.name]"
+                  required
+                >
+              </div>
+            </template>
+
+            <div class="form-group">
+              <label x-text="config?.parameters?.workbook || 'Excel File'"></label>
+              <div class="file-input-wrapper" :class="{ 'has-file': file }">
+                <input type="file" id="file" name="file" accept=".xls,.xlsx,.xlsm,.xlsb" @change="onFileChange" required>
+                <svg class="file-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <div class="file-input-text" x-show="!file">
+                  <strong>Click to upload</strong> or drag and drop<br>
+                  XLS, XLSX, XLSM, XLSB
+                </div>
+                <div class="file-name" x-show="file" x-text="file?.name"></div>
+              </div>
+            </div>
+
+            <button type="submit" :disabled="!canSubmit" x-text="config?.parameters?.submit || 'Generate SAP File'">
+            </button>
+          </div>
+        </form>
+
+        <!-- Success message -->
+        <div x-show="success" class="message-box success" x-cloak>
+          <strong>
+            <svg class="success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Success!
+          </strong>
+          <span x-text="successMessage"></span>
+        </div>
+
+        <!-- Warnings -->
+        <div x-show="warnings.length > 0" class="message-box warning" x-cloak>
+          <div class="warning-title">
+            <svg class="warning-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            Warnings
+          </div>
+          <ul class="warning-list">
+            <template x-for="warning in warnings" :key="warning.field + warning.message">
+              <li>
+                <strong x-text="warning.field + ':'"></strong>
+                <span x-text="warning.message"></span>
+              </li>
+            </template>
+          </ul>
+        </div>
+
+        <!-- Error message -->
+        <div x-show="error" class="message-box error" x-cloak>
+          <div class="error-title">
+            <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span x-text="error"></span>
+          </div>
+          <ul x-show="errorSuggestions.length > 0" class="error-suggestions">
+            <template x-for="suggestion in errorSuggestions" :key="suggestion">
+              <li x-text="suggestion"></li>
+            </template>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer" x-show="!loading">
+        <a href="https://github.com/anthropics/tikrana" target="_blank">Tikrana</a> &mdash; Browser-native data translation
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

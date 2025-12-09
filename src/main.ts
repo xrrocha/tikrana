@@ -10,6 +10,8 @@ import { parseYamlConfig, getSourceConfig } from './config/loader';
 import { deriveRuntimeSources, type AppConfig, type RuntimeSource } from './config/types';
 import { processExcel } from './extraction/engine';
 import { downloadZip } from './output/zip';
+import { TikranaError, createNetworkError, createConfigError, wrapError } from './validation/errors';
+import type { ValidationIssue } from './validation/errors';
 
 // Configuration URL - can be overridden via data attribute or query param
 const DEFAULT_CONFIG_URL = '/config.yaml';
@@ -24,7 +26,11 @@ interface AppState {
   formData: Record<string, string>;
   file: File | null;
   error: string;
+  errorSuggestions: string[];
+  warnings: ValidationIssue[];
   processing: boolean;
+  success: boolean;
+  successMessage: string;
 
   // Computed
   canSubmit: boolean;
@@ -34,6 +40,9 @@ interface AppState {
   onSourceChange(): void;
   onFileChange(event: Event): void;
   process(): Promise<void>;
+  clearMessages(): void;
+  formatError(err: unknown): void;
+  getSelectedSourceConfig(): { description: string; logo?: string } | null;
 }
 
 // Alpine.js app definition
@@ -46,7 +55,11 @@ Alpine.data('app', (): AppState => ({
   formData: {},
   file: null,
   error: '',
+  errorSuggestions: [],
+  warnings: [],
   processing: false,
+  success: false,
+  successMessage: '',
 
   get canSubmit(): boolean {
     if (!this.selectedSource || !this.file || this.processing) return false;
@@ -55,6 +68,27 @@ Alpine.data('app', (): AppState => ({
       if (!this.formData[field.name]) return false;
     }
     return true;
+  },
+
+  clearMessages() {
+    this.error = '';
+    this.errorSuggestions = [];
+    this.warnings = [];
+    this.success = false;
+    this.successMessage = '';
+  },
+
+  formatError(err: unknown) {
+    if (err instanceof TikranaError) {
+      this.error = err.userMessage;
+      this.errorSuggestions = err.suggestions ?? [];
+    } else if (err instanceof Error) {
+      this.error = err.message;
+      this.errorSuggestions = [];
+    } else {
+      this.error = 'An unexpected error occurred';
+      this.errorSuggestions = [];
+    }
   },
 
   async init() {
@@ -70,16 +104,40 @@ Alpine.data('app', (): AppState => ({
       // Load configuration
       const response = await fetch(configUrl);
       if (!response.ok) {
-        throw new Error(`Failed to load config from ${configUrl}: ${response.status}`);
+        throw createNetworkError(
+          `Failed to load configuration from ${configUrl} (HTTP ${response.status})`,
+          [
+            'Check that the configuration file exists',
+            'Verify the URL is correct',
+            'Try refreshing the page',
+          ]
+        );
       }
 
       const configText = await response.text();
-      this.config = parseYamlConfig(configText);
+      try {
+        this.config = parseYamlConfig(configText);
+      } catch (parseErr) {
+        throw createConfigError(
+          `Invalid configuration file: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+          [
+            'Verify the configuration file is valid YAML',
+            'Check for syntax errors in the config file',
+          ]
+        );
+      }
+
       this.sources = deriveRuntimeSources(this.config);
+
+      if (this.sources.length === 0) {
+        throw createConfigError('No sources defined in configuration', [
+          'Add at least one source definition to the config file',
+        ]);
+      }
 
       console.log(`Tikrana loaded: ${this.sources.length} sources from ${configUrl}`);
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Failed to load configuration';
+      this.formatError(err);
       console.error('Config load error:', err);
     } finally {
       this.loading = false;
@@ -90,7 +148,7 @@ Alpine.data('app', (): AppState => ({
     const source = this.sources.find(s => s.name === this.selectedSource);
     this.dynamicFields = source?.userInputFields ?? [];
     this.formData = {};
-    this.error = '';
+    this.clearMessages();
     // Initialize form data with empty strings
     for (const field of this.dynamicFields) {
       this.formData[field.name] = '';
@@ -100,14 +158,20 @@ Alpine.data('app', (): AppState => ({
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.file = input.files?.[0] ?? null;
-    this.error = '';
+    this.clearMessages();
+  },
+
+  getSelectedSourceConfig() {
+    if (!this.config || !this.selectedSource) return null;
+    return this.config.sources.find(s => s.name === this.selectedSource) ?? null;
   },
 
   async process() {
-    this.error = '';
+    this.clearMessages();
 
     if (!this.file || !this.selectedSource || !this.config) {
       this.error = 'Please select a source and file';
+      this.errorSuggestions = [];
       return;
     }
 
@@ -120,19 +184,31 @@ Alpine.data('app', (): AppState => ({
       // Get source configuration
       const sourceConfig = getSourceConfig(this.config, this.selectedSource);
       if (!sourceConfig) {
-        throw new Error(`Unknown source: ${this.selectedSource}`);
+        throw createConfigError(`Unknown source type: ${this.selectedSource}`, [
+          'Select a valid source from the dropdown',
+          'Reload the page to refresh the configuration',
+        ]);
       }
 
-      // Process Excel file
+      // Process Excel file with full validation
       const result = processExcel(
         arrayBuffer,
         sourceConfig,
         this.config.result,
-        this.formData
+        this.formData,
+        this.file.name
       );
 
+      // Show warnings even if successful
+      if (result.warnings && result.warnings.length > 0) {
+        this.warnings = result.warnings;
+      }
+
       if (!result.success) {
-        throw new Error(result.error ?? 'Processing failed');
+        if (result.error) {
+          throw result.error;
+        }
+        throw new Error('Processing failed');
       }
 
       // Generate and download ZIP
@@ -144,9 +220,12 @@ Alpine.data('app', (): AppState => ({
         result.detailContent!
       );
 
+      // Show success message
+      this.success = true;
+      this.successMessage = `Generated: ${result.zipFilename}`;
       console.log(`Generated: ${result.zipFilename}`);
     } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Unknown error occurred';
+      this.formatError(err);
       console.error('Processing error:', err);
     } finally {
       this.processing = false;

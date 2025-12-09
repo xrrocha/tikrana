@@ -27,5 +27,8 @@ coverage/
 # Private test fixtures (client data)
 tests/fixtures/excel/legacy/
 
+# Private E2E tests (LHO client-specific)
+tests/e2e/lho/
+
 # Logs
 *.log

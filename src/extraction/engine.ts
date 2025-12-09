@@ -7,6 +7,17 @@
 
 import { ExcelReader, ExcelSheet } from '../excel/reader';
 import type { SourceConfig, ResultConfig, SourceProperty } from '../config/types';
+import {
+  validateExcelFile,
+  type ExcelValidationResult,
+} from '../validation/excel';
+import {
+  TikranaError,
+  createExtractionError,
+  createValidationError,
+  wrapError,
+  type ValidationIssue,
+} from '../validation/errors';
 
 /**
  * Extracted data from an Excel file.
@@ -206,47 +217,96 @@ export interface ProcessingResult {
   headerContent?: string;
   detailContent?: string;
   zipFilename?: string;
-  error?: string;
+  error?: TikranaError;
+  warnings?: ValidationIssue[];
 }
 
+/**
+ * Process an Excel file with full validation and extraction.
+ * Returns structured results with detailed error information.
+ */
 export function processExcel(
   data: ArrayBuffer | Uint8Array,
   sourceConfig: SourceConfig,
   resultConfig: ResultConfig,
-  userInput: Record<string, string>
+  userInput: Record<string, string>,
+  filename: string = 'file.xlsx'
 ): ProcessingResult {
+  const allWarnings: ValidationIssue[] = [];
+
   try {
-    // Extract data from Excel
-    const extracted = extractFromExcel(data, sourceConfig);
+    // Convert Uint8Array to ArrayBuffer if needed
+    const arrayBuffer = data instanceof ArrayBuffer ? data : data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
 
-    // Merge with user input and normalize dates
-    const headerData = mergeUserInput(extracted.header, userInput);
+    // Step 1: Validate Excel file before processing
+    const validation = validateExcelFile(arrayBuffer, filename, sourceConfig);
+    allWarnings.push(...validation.warnings);
 
-    // Normalize date fields in header
+    if (!validation.valid) {
+      const errorMessages = validation.errors.map(e => e.message).join('; ');
+      return {
+        success: false,
+        error: createValidationError(errorMessages, [
+          'Verify the file matches the selected source type',
+          'Check that the Excel file has the expected structure',
+          ...validation.warnings.map(w => w.message),
+        ]),
+        warnings: allWarnings,
+      };
+    }
+
+    // Step 2: Extract data from validated workbook
+    // Use the pre-parsed workbook from validation to avoid double-parsing
+    const reader = new ExcelReader(validation.workbook!);
+    const sheet = reader.getSheet(sourceConfig.sheetIndex);
+
+    const header = extractHeader(
+      sheet,
+      sourceConfig.header,
+      sourceConfig.defaultValues
+    );
+
+    const detail = extractDetail(sheet, sourceConfig.detail);
+
+    // Step 3: Merge with user input and normalize dates
+    const headerData = mergeUserInput(header, userInput);
+
     for (const prop of resultConfig.header.properties) {
       if (prop.type === 'date' && headerData[prop.name]) {
         headerData[prop.name] = normalizeDate(headerData[prop.name]);
       }
     }
 
-    // Validate header
+    // Step 4: Validate header has required properties
     const requiredHeaderProps = resultConfig.header.properties
       .filter(p => p.defaultValue === undefined)
       .map(p => p.name);
     const missingHeader = validateRecord(headerData, requiredHeaderProps);
+
     if (missingHeader.length > 0) {
       return {
         success: false,
-        error: `Missing header properties: ${missingHeader.join(', ')}`,
+        error: createValidationError(
+          `Missing required fields: ${missingHeader.join(', ')}`,
+          [
+            'Ensure all required fields are filled in',
+            'Check that the Excel file contains data in the expected cells',
+            ...missingHeader.map(f => `Fill in the "${f}" field`),
+          ]
+        ),
+        warnings: allWarnings,
       };
     }
 
-    // Note: We don't validate detail rows for missing columns because:
-    // 1. Some fixtures have mismatched column names (e.g., TIA's "BARRAS" vs "PROVEEDOR COD.BARRAS")
-    // 2. Kotlin allows this and just produces empty values
-    // 3. Contract tests will catch any parity issues
+    // Step 5: Check for empty detail data (warning, not error)
+    if (detail.length === 0) {
+      allWarnings.push({
+        field: 'detail',
+        message: 'No data rows found in the detail table',
+      });
+    }
 
-    // Generate header content (single record as array)
+    // Step 6: Generate output content
     const headerContent = generateFileContent(
       resultConfig.separator,
       resultConfig.header.prolog,
@@ -255,8 +315,7 @@ export function processExcel(
       resultConfig.header.epilog
     );
 
-    // Generate detail content (add defaults to each row)
-    const detailWithDefaults = extracted.detail.map(row => {
+    const detailWithDefaults = detail.map(row => {
       const withDefaults: Record<string, string> = {};
       for (const prop of resultConfig.detail.properties) {
         withDefaults[prop.name] = row[prop.name] ?? prop.defaultValue ?? '';
@@ -272,7 +331,7 @@ export function processExcel(
       resultConfig.detail.epilog
     );
 
-    // Generate ZIP filename
+    // Step 7: Generate ZIP filename
     const zipFilename = expand(resultConfig.baseName, {
       ...headerData,
       sourceName: sourceConfig.name,
@@ -283,11 +342,15 @@ export function processExcel(
       headerContent,
       detailContent,
       zipFilename,
+      warnings: allWarnings,
     };
   } catch (err) {
+    // Wrap unknown errors with helpful context
+    const wrappedError = wrapError(err, 'Processing Excel file');
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error during extraction',
+      error: wrappedError,
+      warnings: allWarnings,
     };
   }
 }
