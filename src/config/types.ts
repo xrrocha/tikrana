@@ -122,6 +122,12 @@ export interface AppConfig {
     submit: string;
     successMessage?: string;
     extractionError: string;
+    /** Label for header section in preview (default: "Header") */
+    headerLabel?: string;
+    /** Label for detail section in preview (default: "Detail") */
+    detailLabel?: string;
+    /** Label for preview section title (default: "Preview") */
+    previewLabel?: string;
   };
   /** Available sources */
   sources: SourceConfig[];

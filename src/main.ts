@@ -284,6 +284,9 @@ Alpine.data('app', (): AppState => ({
 
     this.processing = true;
 
+    // Allow UI to update before heavy processing
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
     try {
       // Read file as ArrayBuffer
       const arrayBuffer = await this.file.arrayBuffer();

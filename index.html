@@ -606,14 +606,14 @@
   <!-- Processing overlay -->
   <div x-show="processing" class="processing-overlay" x-cloak>
     <div class="spinner"></div>
-    <div class="loading-text">Procesando archivo...</div>
+    <div class="loading-text">Processing...</div>
   </div>
 
   <!-- Header bar with logo and title -->
   <div class="header-bar" x-show="!loading && !needsConfigFile">
     <img x-show="config?.logo" :src="config?.logo" :alt="config?.name" class="header-logo" x-cloak>
     <span class="header-title" x-text="config?.description || 'Tikrana'"></span>
-    <button type="button" class="header-config-btn" @click="changeConfig" :title="configFileName || 'Cambiar configuración'">
+    <button type="button" class="header-config-btn" @click="changeConfig" :title="configFileName || 'Change configuration'">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -625,7 +625,7 @@
   <!-- Loading state -->
   <div x-show="loading" class="loading-container" x-cloak>
     <div class="spinner"></div>
-    <div class="loading-text">Cargando configuración...</div>
+    <div class="loading-text">Loading configuration...</div>
   </div>
 
   <!-- Config file picker (shown when no config available) -->
@@ -638,9 +638,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </div>
-        <h2 class="config-picker-title">Seleccionar Configuración</h2>
+        <h2 class="config-picker-title">Select Configuration</h2>
         <p class="config-picker-text">
-          Para comenzar, seleccione un archivo de configuración YAML.
+          To get started, select a YAML configuration file.
         </p>
         <label class="file-input-wrapper config-file-input">
           <input type="file" accept=".yaml,.yml" @change="onConfigFileChange">
@@ -648,7 +648,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
           <span class="file-text">
-            <strong>Elegir archivo</strong> &nbsp;·&nbsp; tikrana.yaml
+            <strong>Choose file</strong> &nbsp;·&nbsp; tikrana.yaml
           </span>
         </label>
       </div>
@@ -666,7 +666,7 @@
             <div class="source-section">
               <label for="source" x-text="config?.parameters?.source || 'Source'"></label>
               <select id="source" name="source" x-model="selectedSource" @change="onSourceChange">
-                <option value="">Seleccionar...</option>
+                <option value="">Select...</option>
                 <template x-for="source in sources" :key="source.name">
                   <option :value="source.name" x-text="source.description"></option>
                 </template>
@@ -677,7 +677,7 @@
             <div class="customer-section">
               <!-- Empty state -->
               <div x-show="!selectedSource" class="empty-state">
-                Seleccione un cliente para continuar
+                Select a source to continue
               </div>
 
               <!-- Form content -->
@@ -717,7 +717,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
                       <span class="file-text" x-show="!file">
-                        <strong>Elegir archivo</strong> &nbsp;·&nbsp; .xls, .xlsx
+                        <strong>Choose file</strong> &nbsp;·&nbsp; .xls, .xlsx
                       </span>
                       <span class="file-name" x-show="file" x-text="file?.name"></span>
                     </label>
@@ -738,10 +738,10 @@
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
-                    Descargar ZIP
+                    Download ZIP
                   </button>
                   <button x-show="preview" type="button" class="btn-cancel" @click="cancelPreview" x-cloak>
-                    Cancelar
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -754,13 +754,13 @@
     <!-- Preview card (side-by-side when active) -->
     <div x-show="preview" class="card preview-card" x-cloak x-transition>
       <div class="preview-header">
-        <span class="preview-title">Vista Previa</span>
+        <span class="preview-title" x-text="config?.parameters?.previewLabel || 'Preview'"></span>
         <span class="preview-filename" x-text="preview?.zipFilename"></span>
       </div>
       <div class="preview-body">
         <!-- Header preview -->
         <div class="preview-section">
-          <div class="preview-section-title">Cabecera</div>
+          <div class="preview-section-title" x-text="config?.parameters?.headerLabel || 'Header'"></div>
           <div class="preview-table-wrapper">
             <table class="preview-table">
               <thead>
@@ -783,7 +783,7 @@
 
         <!-- Detail preview -->
         <div class="preview-section">
-          <div class="preview-section-title">Detalle</div>
+          <div class="preview-section-title" x-text="config?.parameters?.detailLabel || 'Detail'"></div>
           <div class="preview-table-wrapper detail">
             <table class="preview-table">
               <thead>
@@ -804,7 +804,7 @@
               </tbody>
             </table>
           </div>
-          <div class="preview-row-count" x-text="`${preview?.detail?.length || 0} filas`"></div>
+          <div class="preview-row-count" x-text="`${preview?.detail?.length || 0} rows`"></div>
         </div>
 
       </div>
@@ -828,7 +828,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
         <div class="message-content">
-          <div class="message-title">Advertencias</div>
+          <div class="message-title">Warnings</div>
           <ul class="message-list">
             <template x-for="warning in warnings" :key="warning.field + warning.message">
               <li><strong x-text="warning.field + ':'"></strong> <span x-text="warning.message"></span></li>

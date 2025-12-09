@@ -6,12 +6,15 @@ config:
   logo: rey-pepinito.png
   parameters:
     htmx: 'https://unpkg.com/htmx.org@2.0.6'
-    source: Cliente
-    workbook: Archivo pedido
-    submit: Generar Archivo ERP
+    source: Customer
+    workbook: Order file
+    submit: Generate ERP File
     extractionError: |
-      Error extrayendo pedido de archivo Excel.
-      Verifique que corresponde al cliente seleccionado
+      Error extracting order from Excel file.
+      Verify the file matches the selected customer.
+    headerLabel: Header
+    detailLabel: Detail
+    previewLabel: Preview
   sources:
     - name: el-dorado
       description: Mercados El Dorado
