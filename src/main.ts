@@ -14,7 +14,8 @@ import { TikranaError, createNetworkError, createConfigError, wrapError } from '
 import type { ValidationIssue } from './validation/errors';
 
 // Configuration URL - can be overridden via data attribute or query param
-const DEFAULT_CONFIG_URL = '/config.yaml';
+const DEFAULT_CONFIG_URL = '/tikrana.yaml';
+const CONFIG_STORAGE_KEY = 'tikrana-config';
 
 interface PreviewData {
   header: Record<string, string | null>;
@@ -22,11 +23,17 @@ interface PreviewData {
   headerContent: string;
   detailContent: string;
   zipFilename: string;
+  /** Ordered property names for header display */
+  headerProperties: string[];
+  /** Ordered property names for detail display */
+  detailProperties: string[];
 }
 
 interface AppState {
   // State
   loading: boolean;
+  needsConfigFile: boolean;
+  configFileName: string;
   config: AppConfig | null;
   sources: RuntimeSource[];
   selectedSource: string;
@@ -46,6 +53,9 @@ interface AppState {
 
   // Methods
   init(): Promise<void>;
+  applyConfig(configText: string, source: string): void;
+  onConfigFileChange(event: Event): Promise<void>;
+  changeConfig(): void;
   onSourceChange(): void;
   onFileChange(event: Event): Promise<void>;
   processForPreview(): Promise<void>;
@@ -60,6 +70,8 @@ interface AppState {
 // Alpine.js app definition
 Alpine.data('app', (): AppState => ({
   loading: true,
+  needsConfigFile: false,
+  configFileName: '',
   config: null,
   sources: [],
   selectedSource: '',
@@ -115,41 +127,49 @@ Alpine.data('app', (): AppState => ({
         || new URLSearchParams(window.location.search).get('config')
         || DEFAULT_CONFIG_URL;
 
-      // Load configuration
-      const response = await fetch(configUrl);
-      if (!response.ok) {
-        throw createNetworkError(
-          `Failed to load configuration from ${configUrl} (HTTP ${response.status})`,
-          [
-            'Check that the configuration file exists',
-            'Verify the URL is correct',
-            'Try refreshing the page',
-          ]
-        );
-      }
+      let configText: string | null = null;
+      let configSource = '';
 
-      const configText = await response.text();
+      // Strategy 1: Try fetch (works for http/https)
       try {
-        this.config = parseYamlConfig(configText);
-      } catch (parseErr) {
-        throw createConfigError(
-          `Invalid configuration file: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
-          [
-            'Verify the configuration file is valid YAML',
-            'Check for syntax errors in the config file',
-          ]
-        );
+        const response = await fetch(configUrl);
+        if (response.ok) {
+          configText = await response.text();
+          configSource = configUrl;
+        }
+      } catch {
+        // fetch failed (likely file:// protocol)
+        console.log('Fetch failed, trying localStorage cache...');
       }
 
-      this.sources = deriveRuntimeSources(this.config);
-
-      if (this.sources.length === 0) {
-        throw createConfigError('No sources defined in configuration', [
-          'Add at least one source definition to the config file',
-        ]);
+      // Strategy 2: Try localStorage cache
+      if (!configText) {
+        const cached = localStorage.getItem(CONFIG_STORAGE_KEY);
+        if (cached) {
+          try {
+            const cacheData = JSON.parse(cached);
+            configText = cacheData.content;
+            configSource = `cached: ${cacheData.fileName}`;
+            this.configFileName = cacheData.fileName;
+            console.log(`Using cached config: ${cacheData.fileName}`);
+          } catch {
+            console.log('Invalid cache, clearing...');
+            localStorage.removeItem(CONFIG_STORAGE_KEY);
+          }
+        }
       }
 
-      console.log(`Tikrana loaded: ${this.sources.length} sources from ${configUrl}`);
+      // Strategy 3: Need user to select config file
+      if (!configText) {
+        console.log('No config available, showing file picker...');
+        this.needsConfigFile = true;
+        this.loading = false;
+        return;
+      }
+
+      // Parse and apply configuration
+      this.applyConfig(configText, configSource);
+
     } catch (err) {
       this.formatError(err);
       console.error('Config load error:', err);
@@ -158,10 +178,78 @@ Alpine.data('app', (): AppState => ({
     }
   },
 
+  /** Parse and apply configuration from text content */
+  applyConfig(configText: string, source: string) {
+    try {
+      this.config = parseYamlConfig(configText);
+    } catch (parseErr) {
+      throw createConfigError(
+        `Invalid configuration file: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+        [
+          'Verify the configuration file is valid YAML',
+          'Check for syntax errors in the config file',
+        ]
+      );
+    }
+
+    this.sources = deriveRuntimeSources(this.config);
+
+    if (this.sources.length === 0) {
+      throw createConfigError('No sources defined in configuration', [
+        'Add at least one source definition to the config file',
+      ]);
+    }
+
+    this.needsConfigFile = false;
+    console.log(`Tikrana loaded: ${this.sources.length} sources from ${source}`);
+  },
+
+  /** Handle config file selection */
+  async onConfigFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.loading = true;
+    this.error = '';
+    this.errorSuggestions = [];
+
+    try {
+      const configText = await file.text();
+      this.configFileName = file.name;
+
+      // Cache to localStorage for future sessions
+      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify({
+        fileName: file.name,
+        content: configText,
+        timestamp: Date.now(),
+      }));
+
+      this.applyConfig(configText, file.name);
+    } catch (err) {
+      this.formatError(err);
+      console.error('Config file error:', err);
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  /** Allow user to change/reload config */
+  changeConfig() {
+    localStorage.removeItem(CONFIG_STORAGE_KEY);
+    this.config = null;
+    this.sources = [];
+    this.selectedSource = '';
+    this.configFileName = '';
+    this.needsConfigFile = true;
+    this.clearMessages();
+  },
+
   onSourceChange() {
     const source = this.sources.find(s => s.name === this.selectedSource);
     this.dynamicFields = source?.userInputFields ?? [];
     this.formData = {};
+    this.file = null;
     this.clearMessages();
     // Initialize form data with empty strings
     for (const field of this.dynamicFields) {
@@ -172,7 +260,14 @@ Alpine.data('app', (): AppState => ({
   async onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.file = input.files?.[0] ?? null;
-    this.clearMessages();
+
+    // Clear previous results but keep form state
+    this.error = '';
+    this.errorSuggestions = [];
+    this.warnings = [];
+    this.success = false;
+    this.successMessage = '';
+    this.preview = null;
 
     // If we have a file, source selected, and all required fields filled, process immediately
     if (this.file && this.selectedSource && this.config) {
@@ -224,12 +319,27 @@ Alpine.data('app', (): AppState => ({
       }
 
       // Store preview data for user confirmation
+      // Only show fields that are extracted from Excel or provided by user (not constants)
+      const extractedHeaderFields = new Set(sourceConfig.header.map(p => p.name));
+      const userInputFields = new Set(this.dynamicFields.map(f => f.name));
+      const extractedDetailFields = new Set(sourceConfig.detail.properties.map(p => p.name));
+
+      // Filter to show only meaningful fields in config order
+      const headerProperties = this.config.result.header.properties
+        .map(p => p.name)
+        .filter(name => extractedHeaderFields.has(name) || userInputFields.has(name));
+      const detailProperties = this.config.result.detail.properties
+        .map(p => p.name)
+        .filter(name => extractedDetailFields.has(name));
+
       this.preview = {
         header: result.extractedData!.header,
         detail: result.extractedData!.detail,
         headerContent: result.headerContent!,
         detailContent: result.detailContent!,
         zipFilename: result.zipFilename!,
+        headerProperties,
+        detailProperties,
       };
     } catch (err) {
       this.formatError(err);

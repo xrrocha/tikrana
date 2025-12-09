@@ -47,6 +47,26 @@ Convert Excel purchase orders to ERP import files (ZIP containing delimited text
 
 🚧 **Architectural exploration phase** — not yet ready for production use.
 
+## Offline Usage (file:// protocol)
+
+When running the bundled HTML file locally (double-click to open):
+
+1. **Config loading**: On first run, you'll be prompted to select a configuration file (`.yaml` or `.yml`)
+2. **Caching**: The selected config is cached in localStorage for future sessions
+3. **Asset placement**: Place logo images in the same folder as the HTML file, matching paths in your config
+
+Example folder structure for offline use:
+```
+my-folder/
+├── tikrana.html       # The bundled app
+├── tikrana.yaml       # Your configuration
+├── company-logo.png   # Main logo (config.logo)
+├── source1-logo.png   # Source logos (sources[].logo)
+└── source2-logo.png
+```
+
+To switch configurations, click the config button in the header bar.
+
 ## License
 
 [AGPL-3.0](LICENSE)

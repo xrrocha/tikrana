@@ -12,6 +12,11 @@ export default defineConfig({
   build: {
     target: 'esnext',
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        entryFileNames: '[name].js',
+      },
+    },
   },
   server: {
     port: 5173,
@@ -19,5 +24,5 @@ export default defineConfig({
       allow: ['.'],
     },
   },
-  publicDir: 'tests/fixtures/legacy/assets',
+  publicDir: 'tests/fixtures/demo/assets',
 });

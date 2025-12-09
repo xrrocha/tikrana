@@ -1,0 +1,152 @@
+port: 9090
+assetsDir: ./assets
+config:
+  name: pedidos
+  description: 'Productos Lácteos del Sur "Rey Pepinito". Pedidos ERP Excel'
+  logo: rey-pepinito.png
+  parameters:
+    htmx: 'https://unpkg.com/htmx.org@2.0.6'
+    source: Cliente
+    workbook: Archivo pedido
+    submit: Generar Archivo ERP
+    extractionError: |
+      Error extrayendo pedido de archivo Excel.
+      Verifique que corresponde al cliente seleccionado
+  sources:
+    - name: el-dorado
+      description: Mercados El Dorado
+      logo: el-dorado.png
+      defaultValues:
+        CardCode: C800197225
+      sheetIndex: 0 # Pedido Rey Pepinito
+      header:
+        - name: NumAtCard
+          locator: E2
+        - name: DocDate
+          locator: E3
+          replacements:
+            '/': ''
+      detail:
+        locator: A8
+        properties:
+          - name: ItemCode
+            locator: Cod.
+            replacements:
+              77086: 701987570207
+              47086: 707271908503
+          - name: Quantity
+            locator: Cant.
+    - name: cascabel
+      description: Minimercados Cascabel
+      logo: cascabel.png
+      defaultValues:
+        CardCode: C1790014208001
+      sheetIndex: 0 # Lacteos del Sur
+      header:
+        - name: NumAtCard
+          locator: E2
+        - name: DocDate
+          locator: G2
+          replacements:
+            '-': ''
+      detail:
+        locator: A8
+        properties:
+          - name: ItemCode
+            locator: CODIGO
+          - name: Quantity
+            locator: CANT.
+    - name: la-nanita
+      description: La Ñañita
+      logo: la-nanita.png
+      defaultValues:
+        CardCode: C1701234567001
+      sheetIndex: 0 # Lacteos del Sur
+      header: []
+      detail:
+        locator: A7
+        properties:
+          - name: ItemCode
+            locator: CÓDIGO
+          - name: Quantity
+            locator: UNIDADES
+    - name: la-pinta
+      description: Tiendas La Pinta
+      logo: la-pinta.png
+      defaultValues:
+        CardCode: C102345678
+      sheetIndex: 0 # Lacteos del Sur
+      header:
+        - name: NumAtCard
+          locator: D2
+      detail:
+        locator: A8
+        properties:
+          - name: ItemCode
+            locator: COD.
+          - name: Quantity
+            locator: CANT.
+    - name: uber-gross
+      description: Supermercados ÜberGroß
+      logo: uber-gross.png
+      defaultValues:
+        CardCode: CDE123456789
+      sheetIndex: 0 # Lacteos del Sur
+      header:
+        - name: NumAtCard
+          locator: D2
+        - name: DocDate
+          locator: D3
+          replacements:
+            '-': ''
+        - name: DocDueDate
+          locator: D4
+          replacements:
+            '-': ''
+      detail:
+        locator: A7
+        properties:
+          - name: ItemCode
+            locator: CÓDIGO
+          - name: Quantity
+            locator: CANTIDAD
+  result:
+    separator: "\t"
+    baseName: erp-pedido-${sourceName}-${NumAtCard}
+    header:
+      filename: cabecera.txt
+      properties:
+        - name: DocNum
+          fyi: Número de pedido ERP
+          defaultValue: 1
+        - name: DocEntry
+          defaultValue: 1
+        - name: DocType
+          defaultValue: dDocument_Items
+        - name: DocDate
+          type: date
+          prompt: Fecha de pedido
+        - name: DocDueDate
+          type: date
+          prompt: Fecha de entrega
+        - name: CardCode
+          prompt: RUC del cliente
+        - name: NumAtCard
+          prompt: Número de pedido
+      prolog: |
+        DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+        DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+    detail:
+      filename: detalle.txt
+      properties:
+        - name: DocNum
+          defaultValue: 1
+        - name: LineNum
+          defaultValue: ${index}
+        - name: ItemCode
+        - name: Quantity
+        - name: WhsCode
+          defaultValue: BD-PTE
+      prolog: |
+        ParentKey	LineNum	ItemCode	Quantity	WarehouseCode
+        DocNum	LineNum	ItemCode	Quantity	WhsCode

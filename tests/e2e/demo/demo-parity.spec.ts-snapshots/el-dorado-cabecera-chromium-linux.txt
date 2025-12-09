@@ -1,0 +1,3 @@
+DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+DocNum	DocEntry	DocType	DocDate	DocDueDate	CardCode	NumAtCard
+1	1	dDocument_Items	20250714	20240215	C800197225	B001-00045888

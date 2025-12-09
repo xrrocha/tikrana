@@ -29,6 +29,11 @@ const __dirname = path.dirname(__filename);
 
 const USE_KOTLIN = process.env.USE_KOTLIN === '1';
 
+// Configure snapshot directory for legacy contract tests
+test.use({
+  snapshotDir: path.join(__dirname, '../../fixtures/legacy/snapshots'),
+});
+
 /**
  * UI abstraction for interacting with either Kotlin or TypeScript app.
  * Both apps have similar structure but slightly different selectors.
@@ -66,7 +71,8 @@ const ui = {
   /** Upload file - Kotlin uses 'wbFile', TypeScript uses 'file' */
   async uploadFile(page: Page, filePath: string) {
     // File input may be hidden for styling - use toBeAttached
-    const fileInput = page.locator('input[type="file"]');
+    // Specifically target Excel file input (not config picker) using accept attribute
+    const fileInput = page.locator('input[type="file"][accept*=".xls"]');
     await expect(fileInput).toBeAttached({ timeout: 5000 });
     await fileInput.setInputFiles(filePath);
   },
@@ -126,13 +132,17 @@ test.describe('Output Parity: Excel Processing', () => {
 
       // Upload Excel file (legacy = private client data, git-ignored)
       const filePath = path.join(__dirname, `../../fixtures/legacy/excel/${excelFile}`);
-      await ui.uploadFile(page, filePath);
 
       // TypeScript: preview appears after file upload, then confirm download
       // Kotlin: submit triggers immediate download
       const downloadPromise = page.waitForEvent('download');
-      await ui.submit(page);
-      await ui.confirmDownload(page);
+      await ui.uploadFile(page, filePath);
+      if (USE_KOTLIN) {
+        await ui.submit(page);
+      } else {
+        // TypeScript auto-shows preview after upload, click download button
+        await ui.confirmDownload(page);
+      }
       const download = await downloadPromise;
 
       // Validate filename pattern (not exact match)
@@ -175,11 +185,13 @@ test.describe('Output Parity: Validation & UI', () => {
     await ui.fillInput(page, 'DocDueDate', '20240120');
 
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
+
+    // Trigger download
+    const downloadPromise = page.waitForEvent('download');
     await ui.uploadFile(page, filePath);
 
-    // Trigger download (preview shows after upload, then confirm download)
-    const downloadPromise = page.waitForEvent('download');
-    await ui.submit(page);
+    // TypeScript: preview auto-appears, verify it, then download
+    await ui.waitForPreview(page);
     await ui.confirmDownload(page);
     await downloadPromise;
 
@@ -197,11 +209,11 @@ test.describe('Output Parity: Validation & UI', () => {
 
     // Use coral file which should generate warnings for mismatched columns
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
-    await ui.uploadFile(page, filePath);
 
-    // Trigger download (preview shows after upload, then confirm download)
+    // Trigger download (preview auto-shows after upload, then confirm download)
     const downloadPromise = page.waitForEvent('download');
-    await ui.submit(page);
+    await ui.uploadFile(page, filePath);
+    await ui.waitForPreview(page);
     await ui.confirmDownload(page);
     await downloadPromise;
 
@@ -221,11 +233,11 @@ test.describe('Output Parity: Validation & UI', () => {
     await ui.fillInput(page, 'DocDueDate', '20240120');
 
     const filePath = path.join(__dirname, '../../fixtures/legacy/excel/pedido-coral.xls');
-    await ui.uploadFile(page, filePath);
 
-    // Process successfully (preview shows after upload, then confirm download)
+    // Process successfully (preview auto-shows after upload, then confirm download)
     const downloadPromise = page.waitForEvent('download');
-    await ui.submit(page);
+    await ui.uploadFile(page, filePath);
+    await ui.waitForPreview(page);
     await ui.confirmDownload(page);
     await downloadPromise;
 
